@@ -8,3 +8,4 @@ name = "zeus-bench"
 path = "src/main.rs"
 
 [dependencies]
+chess = "3.2.0"

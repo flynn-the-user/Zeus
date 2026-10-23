@@ -10,7 +10,9 @@ and push. A stage is not "done" until its Elo delta is measured and logged.
 
 - [x] v0.1 — Negamax + Alpha-Beta (fixed depth) + material-only eval
       (`Reference/search/Negamax.md`, `Reference/search/Alpha-Beta.md`,
-      `Reference/evaluation/Simplified_Evaluation_Function.md`)
+      `Reference/evaluation/Simplified_Evaluation_Function.md`).
+      Measured: **~1141 Elo** (95% CI 984..1249) vs Stockfish's UCI_Elo
+      floor of 1320 — see `ELO_LOG.md`.
 
 ## Planned, in order
 
