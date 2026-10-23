@@ -1,48 +1,71 @@
-//! zeus-bench: Elo calibration harness.
+//! zeus-bench: round-robin tournament Elo calibration harness.
 //!
-//! Plays Zeus against a local Stockfish restricted to specific target Elo
-//! values (via the standard `UCI_LimitStrength`/`UCI_Elo` option pair,
-//! Reference/protocols/UCI_Protocol.md) at a fixed, fast time control, with
-//! many games run in parallel, and reports an Elo estimate with a
-//! confidence interval per Reference/testing/Match_Statistics.md (see
-//! src/elo.rs). This is the methodology CITATIONS.md and ROADMAP.md
-//! require every future feature's Elo delta to be measured with, so the
-//! time control and opponent set must stay fixed across runs to keep
-//! results comparable.
+//! Zeus plus several Stockfish instances pinned to different target Elo
+//! values (via `UCI_LimitStrength`/`UCI_Elo`,
+//! Reference/protocols/UCI_Protocol.md) all play each other — not just
+//! Zeus against each anchor — at a fixed fast (bullet) time control, many
+//! games in parallel. Every game is recorded as a minimal PGN
+//! (`src/pgn.rs`) and the whole batch is handed to the real `bayeselo` CLI
+//! (`src/bayeselo.rs`, Reference/testing/BayesElo.md) to fit ratings for
+//! every participant jointly via its Bayesian Bradley-Terry model — more
+//! robust than the single-pair logistic formula in `src/elo.rs` (which is
+//! still printed per-pair as a quick cross-check), especially when Zeus
+//! shuts out or gets shut out by an anchor.
+//!
+//! This is the methodology ELO_LOG.md / ROADMAP.md require every future
+//! stage's before/after comparison to reuse unchanged.
+mod bayeselo;
 mod elo;
 mod game;
+mod pgn;
 mod uci_client;
 
 use elo::{estimate, EloEstimate, MatchResult};
 use game::{play_game, Outcome, TimeControl};
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
+use std::fs::OpenOptions;
+use std::io::Write;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use uci_client::UciEngine;
 
+#[derive(Clone)]
+struct Participant {
+    name: String,
+    cmd: String,
+    options: Vec<(String, String)>,
+}
+
 struct Args {
     engine_cmd: String,
+    engine_label: String,
     opponent_cmd: String,
-    games_per_rung: u32,
+    roster_elo: Vec<i64>,
+    games_per_pair: u32,
     concurrency: usize,
     base_ms: i64,
     inc_ms: i64,
     max_plies: u32,
-    rungs: Option<Vec<i64>>,
+    pgn_out: String,
+    bayeselo_path: String,
 }
 
 fn parse_args() -> Args {
     let mut engine_cmd = default_engine_path();
+    let mut engine_label = "Zeus-v0.1".to_string();
     let mut opponent_cmd = "stockfish".to_string();
-    let mut games_per_rung = 40u32;
+    let mut roster_elo = vec![1320i64, 1500, 1700, 1900];
+    let mut games_per_pair = 100u32;
     let mut concurrency = (std::thread::available_parallelism()
         .map(|n| n.get())
         .unwrap_or(2)
         / 2)
     .max(1);
-    let mut base_ms = 10_000i64;
-    let mut inc_ms = 100i64;
+    let mut base_ms = 60_000i64; // 1-minute bullet
+    let mut inc_ms = 0i64;
     let mut max_plies = 240u32;
-    let mut rungs: Option<Vec<i64>> = None;
+    let mut pgn_out = "results/tournament.pgn".to_string();
+    let mut bayeselo_path = default_bayeselo_path();
 
     let argv: Vec<String> = std::env::args().skip(1).collect();
     let mut i = 0;
@@ -52,12 +75,23 @@ fn parse_args() -> Args {
                 engine_cmd = argv[i + 1].clone();
                 i += 2;
             }
+            "--engine-label" => {
+                engine_label = argv[i + 1].clone();
+                i += 2;
+            }
             "--opponent" => {
                 opponent_cmd = argv[i + 1].clone();
                 i += 2;
             }
-            "--games-per-rung" => {
-                games_per_rung = argv[i + 1].parse().expect("--games-per-rung is a number");
+            "--roster" => {
+                roster_elo = argv[i + 1]
+                    .split(',')
+                    .map(|s| s.parse().expect("--roster is a comma list of integers"))
+                    .collect();
+                i += 2;
+            }
+            "--games-per-pair" => {
+                games_per_pair = argv[i + 1].parse().expect("--games-per-pair is a number");
                 i += 2;
             }
             "--concurrency" => {
@@ -76,13 +110,12 @@ fn parse_args() -> Args {
                 max_plies = argv[i + 1].parse().expect("--max-plies is a number");
                 i += 2;
             }
-            "--rungs" => {
-                rungs = Some(
-                    argv[i + 1]
-                        .split(',')
-                        .map(|s| s.parse().expect("--rungs is a comma list of integers"))
-                        .collect(),
-                );
+            "--pgn-out" => {
+                pgn_out = argv[i + 1].clone();
+                i += 2;
+            }
+            "--bayeselo-path" => {
+                bayeselo_path = argv[i + 1].clone();
                 i += 2;
             }
             other => {
@@ -94,13 +127,16 @@ fn parse_args() -> Args {
 
     Args {
         engine_cmd,
+        engine_label,
         opponent_cmd,
-        games_per_rung,
+        roster_elo,
+        games_per_pair,
         concurrency,
         base_ms,
         inc_ms,
         max_plies,
-        rungs,
+        pgn_out,
+        bayeselo_path,
     }
 }
 
@@ -113,17 +149,58 @@ fn default_engine_path() -> String {
     "target/debug/zeus-uci".to_string()
 }
 
-#[derive(Clone, Copy)]
-struct GameSpec {
-    rung_elo: i64,
-    zeus_is_white: bool,
+fn default_bayeselo_path() -> String {
+    let candidate = "tools/bayeselo/bayeselo";
+    if std::path::Path::new(candidate).exists() {
+        candidate.to_string()
+    } else {
+        "bayeselo".to_string()
+    }
 }
 
-#[derive(Clone, Copy)]
-enum ZeusResult {
-    Win,
-    Draw,
-    Loss,
+struct GameSpec {
+    pair: (usize, usize),
+    white_idx: usize,
+    black_idx: usize,
+}
+
+/// Parses games already written by a previous (possibly interrupted) run of
+/// this same `--pgn-out` file, so a relaunch resumes instead of starting
+/// over or double-counting. Only understands our own minimal PGN shape
+/// (`src/pgn.rs`: consecutive `[White]`/`[Black]`/`[Result]` tag lines).
+fn read_existing_games(path: &str) -> Vec<(String, String, String)> {
+    let Ok(contents) = std::fs::read_to_string(path) else {
+        return Vec::new();
+    };
+    let mut games = Vec::new();
+    let (mut white, mut black) = (None, None);
+    for line in contents.lines() {
+        if let Some(v) = extract_tag(line, "White") {
+            white = Some(v);
+        } else if let Some(v) = extract_tag(line, "Black") {
+            black = Some(v);
+        } else if let Some(v) = extract_tag(line, "Result") {
+            if let (Some(w), Some(b)) = (white.take(), black.take()) {
+                games.push((w, b, v));
+            }
+        }
+    }
+    games
+}
+
+fn extract_tag(line: &str, tag: &str) -> Option<String> {
+    let prefix = format!("[{tag} \"");
+    let rest = line.strip_prefix(&prefix)?;
+    rest.strip_suffix("\"]").map(|s| s.to_string())
+}
+
+fn outcome_from_result_token(token: &str) -> Option<Outcome> {
+    match token {
+        "1-0" => Some(Outcome::WhiteWins),
+        "0-1" => Some(Outcome::BlackWins),
+        "1/2-1/2" => Some(Outcome::Draw),
+        _ => None,
+    }
 }
 
 fn main() {
@@ -136,71 +213,127 @@ fn main() {
         );
         std::process::exit(1);
     }
-
-    // Query Stockfish's own declared UCI_Elo range rather than hardcoding
-    // an assumed min/max (Reference/protocols/UCI_Protocol.md: engines
-    // declare "option name UCI_Elo type spin default <x> min <x> max <x>"
-    // during the uci handshake).
-    let probe = UciEngine::spawn(&args.opponent_cmd, &[])
-        .unwrap_or_else(|e| panic!("failed to spawn opponent '{}': {e}", args.opponent_cmd));
-    let uci_elo_opt = probe
-        .options
-        .get("UCI_Elo")
-        .cloned()
-        .unwrap_or_else(|| panic!("opponent '{}' has no UCI_Elo option", args.opponent_cmd));
-    drop(probe);
-    let elo_min = uci_elo_opt.min.expect("UCI_Elo option declares a min");
-    let elo_max = uci_elo_opt.max.expect("UCI_Elo option declares a max");
-    println!(
-        "Opponent '{}' declares UCI_Elo range [{elo_min}, {elo_max}]",
-        args.opponent_cmd
-    );
-
-    let rungs = args.rungs.clone().unwrap_or_else(|| {
-        // Zeus v0.1 (fixed-depth negamax/alpha-beta, material-only eval,
-        // no quiescence search) is expected to be very weak, so the
-        // default ladder stays near the floor of the opponent's range
-        // instead of wasting games on rungs it has ~0% chance against.
-        let span = elo_max - elo_min;
-        vec![
-            elo_min,
-            elo_min + (span as f64 * 0.15) as i64,
-            elo_min + (span as f64 * 0.30) as i64,
-        ]
-    });
-
-    println!(
-        "zeus-bench: engine='{}' opponent='{}' games_per_rung={} concurrency={} tc={}+{}ms max_plies={}",
-        args.engine_cmd, args.opponent_cmd, args.games_per_rung, args.concurrency,
-        args.base_ms, args.inc_ms, args.max_plies
-    );
-
-    for &rung in &rungs {
-        let result = run_rung(&args, rung);
-        print_rung_result(rung, result);
+    if !std::path::Path::new(&args.bayeselo_path).exists() && args.bayeselo_path.contains('/') {
+        eprintln!(
+            "error: bayeselo not found at '{}'. Build it first: scripts/setup_bayeselo.sh",
+            args.bayeselo_path
+        );
+        std::process::exit(1);
     }
-}
 
-fn run_rung(args: &Args, rung_elo: i64) -> MatchResult {
-    let mut queue: VecDeque<GameSpec> = VecDeque::new();
-    for g in 0..args.games_per_rung {
-        queue.push_back(GameSpec {
-            rung_elo,
-            zeus_is_white: g % 2 == 0,
+    let mut participants = vec![Participant {
+        name: args.engine_label.clone(),
+        cmd: args.engine_cmd.clone(),
+        options: vec![],
+    }];
+    for &elo_target in &args.roster_elo {
+        participants.push(Participant {
+            name: format!("Stockfish-{elo_target}"),
+            cmd: args.opponent_cmd.clone(),
+            options: vec![
+                ("UCI_LimitStrength".to_string(), "true".to_string()),
+                ("UCI_Elo".to_string(), elo_target.to_string()),
+                ("Threads".to_string(), "1".to_string()),
+            ],
         });
     }
+    let n = participants.len();
+    let name_to_idx: HashMap<&str, usize> = participants
+        .iter()
+        .enumerate()
+        .map(|(idx, p)| (p.name.as_str(), idx))
+        .collect();
+
+    // Resume: fold in games already recorded in a previous (possibly
+    // interrupted) run against this same --pgn-out path, so this run only
+    // schedules what's still needed per pair, and the cross-check tally /
+    // final bayeselo fit include the earlier games too (the PGN file is
+    // opened in append mode below, so it keeps growing, not replaced).
+    let mut pair_results: HashMap<(usize, usize), (u32, u32, u32)> = HashMap::new();
+    let mut already_played: HashMap<(usize, usize), u32> = HashMap::new();
+    for (white_name, black_name, result) in read_existing_games(&args.pgn_out) {
+        let (Some(&wi), Some(&bi)) = (
+            name_to_idx.get(white_name.as_str()),
+            name_to_idx.get(black_name.as_str()),
+        ) else {
+            continue; // game from a different roster/engine-label; ignore
+        };
+        let Some(outcome) = outcome_from_result_token(&result) else {
+            continue;
+        };
+        let pair = (wi.min(bi), wi.max(bi));
+        *already_played.entry(pair).or_insert(0) += 1;
+        let entry = pair_results.entry(pair).or_insert((0, 0, 0));
+        let lower_is_white = wi == pair.0;
+        match (outcome, lower_is_white) {
+            (Outcome::Draw, _) => entry.1 += 1,
+            (Outcome::WhiteWins, true) | (Outcome::BlackWins, false) => entry.0 += 1,
+            _ => entry.2 += 1,
+        }
+    }
+    let resumed_games: u32 = already_played.values().sum();
+    if resumed_games > 0 {
+        println!("Resuming: {resumed_games} games already recorded in {}", args.pgn_out);
+    }
+
+    let mut queue: VecDeque<GameSpec> = VecDeque::new();
+    for i in 0..n {
+        for j in (i + 1)..n {
+            let done_for_pair = *already_played.get(&(i, j)).unwrap_or(&0);
+            let remaining = args.games_per_pair.saturating_sub(done_for_pair);
+            for g in 0..remaining {
+                // Keep alternating from wherever the previous run left off.
+                let (white_idx, black_idx) = if (done_for_pair + g) % 2 == 0 {
+                    (i, j)
+                } else {
+                    (j, i)
+                };
+                queue.push_back(GameSpec {
+                    pair: (i, j),
+                    white_idx,
+                    black_idx,
+                });
+            }
+        }
+    }
+    let total_scheduled = queue.len();
+    println!(
+        "zeus-bench tournament: {n} participants, {} pairs, {} games/pair, {} games scheduled this run, tc={}+{}ms, concurrency={}",
+        n * (n - 1) / 2,
+        args.games_per_pair,
+        total_scheduled,
+        args.base_ms,
+        args.inc_ms,
+        args.concurrency
+    );
+    for p in &participants {
+        println!("  participant: {}", p.name);
+    }
+
+    if let Some(parent) = std::path::Path::new(&args.pgn_out).parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    let pgn_file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&args.pgn_out)
+        .expect("open --pgn-out for append");
+
     let queue = Arc::new(Mutex::new(queue));
-    let results: Arc<Mutex<Vec<ZeusResult>>> = Arc::new(Mutex::new(Vec::new()));
-    let done = Arc::new(Mutex::new(0u32));
-    let total = args.games_per_rung;
+    let participants = Arc::new(participants);
+    let pgn_file = Arc::new(Mutex::new(pgn_file));
+    let pair_results = Arc::new(Mutex::new(pair_results));
+    let done = Arc::new(AtomicUsize::new(0));
+    let round_counter = Arc::new(AtomicUsize::new(1));
 
     std::thread::scope(|scope| {
         for _ in 0..args.concurrency {
             let queue = Arc::clone(&queue);
-            let results = Arc::clone(&results);
+            let participants = Arc::clone(&participants);
+            let pgn_file = Arc::clone(&pgn_file);
+            let pair_results = Arc::clone(&pair_results);
             let done = Arc::clone(&done);
-            let engine_cmd = args.engine_cmd.clone();
-            let opponent_cmd = args.opponent_cmd.clone();
+            let round_counter = Arc::clone(&round_counter);
             let tc = TimeControl {
                 base_ms: args.base_ms,
                 inc_ms: args.inc_ms,
@@ -214,89 +347,138 @@ fn run_rung(args: &Args, rung_elo: i64) -> MatchResult {
                 };
                 let Some(spec) = spec else { break };
 
-                let Ok(mut zeus) = UciEngine::spawn(&engine_cmd, &[]) else {
+                let white_p = &participants[spec.white_idx];
+                let black_p = &participants[spec.black_idx];
+
+                let Ok(mut white) = UciEngine::spawn(&white_p.cmd, &[]) else {
                     continue;
                 };
-                let Ok(mut opponent) = UciEngine::spawn(&opponent_cmd, &[]) else {
+                let Ok(mut black) = UciEngine::spawn(&black_p.cmd, &[]) else {
                     continue;
                 };
-                let _ = opponent.set_option("UCI_LimitStrength", "true");
-                let _ = opponent.set_option("UCI_Elo", &spec.rung_elo.to_string());
-                let _ = opponent.set_option("Threads", "1");
-                let _ = zeus.sync();
-                let _ = opponent.sync();
+                for (k, v) in &white_p.options {
+                    let _ = white.set_option(k, v);
+                }
+                for (k, v) in &black_p.options {
+                    let _ = black.set_option(k, v);
+                }
+                let _ = white.sync();
+                let _ = black.sync();
 
-                let record = if spec.zeus_is_white {
-                    play_game(&mut zeus, &mut opponent, tc, max_plies)
-                } else {
-                    play_game(&mut opponent, &mut zeus, tc, max_plies)
-                };
-                let outcome = record.outcome;
-                zeus.quit();
-                opponent.quit();
+                let record = play_game(&mut white, &mut black, tc, max_plies);
+                white.quit();
+                black.quit();
 
-                let zeus_result = match outcome {
-                    Outcome::Draw => ZeusResult::Draw,
-                    Outcome::WhiteWins if spec.zeus_is_white => ZeusResult::Win,
-                    Outcome::BlackWins if !spec.zeus_is_white => ZeusResult::Win,
-                    _ => ZeusResult::Loss,
-                };
-                results.lock().unwrap().push(zeus_result);
-
-                let mut d = done.lock().unwrap();
-                *d += 1;
-                println!(
-                    "  [elo {}] game {}/{} done ({:?}, {} plies)",
-                    spec.rung_elo, *d, total, record.reason, record.plies
+                let round = round_counter.fetch_add(1, Ordering::Relaxed);
+                let pgn_text = pgn::format_game(
+                    "Zeus tournament",
+                    round,
+                    &white_p.name,
+                    &black_p.name,
+                    record.outcome,
                 );
+                // Written and flushed immediately, one game at a time, so
+                // an interrupted/killed run never loses completed games -
+                // only the games still in flight at the moment of
+                // interruption, and a resumed run (see
+                // read_existing_games) picks up from here.
+                {
+                    let mut f = pgn_file.lock().unwrap();
+                    let _ = f.write_all(pgn_text.as_bytes());
+                    let _ = f.write_all(b"\n");
+                    let _ = f.flush();
+                }
+
+                {
+                    let mut pr = pair_results.lock().unwrap();
+                    let entry = pr.entry(spec.pair).or_insert((0, 0, 0));
+                    // Tally from the perspective of the lower-index
+                    // participant in the pair (spec.pair.0).
+                    let lower_is_white = spec.white_idx == spec.pair.0;
+                    match (record.outcome, lower_is_white) {
+                        (Outcome::Draw, _) => entry.1 += 1,
+                        (Outcome::WhiteWins, true) | (Outcome::BlackWins, false) => entry.0 += 1,
+                        _ => entry.2 += 1,
+                    }
+                }
+
+                let d = done.fetch_add(1, Ordering::Relaxed) + 1;
+                if d % 10 == 0 || d == total_scheduled {
+                    println!(
+                        "  {d}/{total_scheduled} games done this run ({:?}, {} plies)",
+                        record.reason, record.plies
+                    );
+                }
             });
         }
     });
 
-    let results = results.lock().unwrap();
-    let wins = results.iter().filter(|o| matches!(o, ZeusResult::Win)).count() as u32;
-    let losses = results.iter().filter(|o| matches!(o, ZeusResult::Loss)).count() as u32;
-    let draws = results.iter().filter(|o| matches!(o, ZeusResult::Draw)).count() as u32;
-    MatchResult {
-        wins,
-        draws,
-        losses,
+    println!("\n--- per-pair quick cross-check (src/elo.rs pairwise formula) ---");
+    let pair_results = pair_results.lock().unwrap();
+    for i in 0..n {
+        for j in (i + 1)..n {
+            if let Some(&(w, d, l)) = pair_results.get(&(i, j)) {
+                let result = MatchResult {
+                    wins: w,
+                    draws: d,
+                    losses: l,
+                };
+                print!(
+                    "  {} vs {}: {}W {}D {}L ({:.1}%) ",
+                    participants[i].name,
+                    participants[j].name,
+                    w,
+                    d,
+                    l,
+                    result.expected_score() * 100.0
+                );
+                match estimate(result) {
+                    EloEstimate::Delta {
+                        delta,
+                        delta_lo,
+                        delta_hi,
+                    } => println!("delta={delta:+.0} (95% CI {delta_lo:+.0}..{delta_hi:+.0})"),
+                    EloEstimate::AllLosses => println!("(shutout loss for {})", participants[i].name),
+                    EloEstimate::AllWins => println!("(shutout win for {})", participants[i].name),
+                }
+            }
+        }
     }
-}
 
-fn print_rung_result(rung_elo: i64, result: MatchResult) {
     println!(
-        "\n=== Stockfish UCI_Elo {rung_elo} === N={} W={} D={} L={} score={:.1}%",
-        result.n(),
-        result.wins,
-        result.draws,
-        result.losses,
-        result.expected_score() * 100.0
+        "\nAll games written incrementally to {} as they finished.",
+        args.pgn_out
     );
-    match estimate(result) {
-        EloEstimate::Delta {
-            delta,
-            delta_lo,
-            delta_hi,
-        } => {
+
+    println!("\n--- bayeselo ratings (authoritative, joint fit over all participants) ---");
+    match bayeselo::run(&args.bayeselo_path, &args.pgn_out) {
+        Ok(ratings) => {
+            let known_anchors: Vec<(String, i64)> = args
+                .roster_elo
+                .iter()
+                .map(|&e| (format!("Stockfish-{e}"), e))
+                .collect();
+            let scale = bayeselo::fit_real_elo_scale(&ratings, &known_anchors);
+            if let Some((a, b)) = scale {
+                println!(
+                    "(raw bayeselo ratings are on an arbitrary scale; calibrated to real Elo via least-squares fit against the {} known Stockfish UCI_Elo anchors: real_elo = {a:.1} + {b:.4}*raw_elo)",
+                    known_anchors.len()
+                );
+            } else {
+                println!("(could not calibrate to real Elo: need >=2 Stockfish anchors present in the ratings)");
+            }
             println!(
-                "    estimated Zeus Elo: {:.0}  (95% CI: {:.0} .. {:.0})  [opponent {rung_elo} + delta]",
-                rung_elo as f64 + delta,
-                rung_elo as f64 + delta_lo,
-                rung_elo as f64 + delta_hi
+                "{:<20} {:>6} {:>10} {:>5} {:>5} {:>6} {:>7} {:>7} {:>7}",
+                "Name", "RawElo", "RealElo", "+", "-", "Games", "Score%", "OppElo", "Draws%"
             );
+            for r in &ratings {
+                let real_elo = scale.map(|(a, b)| format!("{:.0}", a + b * r.elo as f64)).unwrap_or_else(|| "n/a".to_string());
+                println!(
+                    "{:<20} {:>6} {:>10} {:>5} {:>5} {:>6} {:>6.0}% {:>7} {:>6.0}%",
+                    r.name, r.elo, real_elo, r.plus, r.minus, r.games, r.score_pct, r.opponent_avg_elo, r.draws_pct
+                );
+            }
         }
-        EloEstimate::AllLosses => {
-            println!(
-                "    0 wins/draws out of {}: Zeus Elo is below {rung_elo} by an unknown margin (no finite estimate from this sample)",
-                result.n()
-            );
-        }
-        EloEstimate::AllWins => {
-            println!(
-                "    0 losses/draws out of {}: Zeus Elo is above {rung_elo} by an unknown margin (no finite estimate from this sample)",
-                result.n()
-            );
-        }
+        Err(e) => eprintln!("bayeselo failed: {e}"),
     }
 }

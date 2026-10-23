@@ -1,18 +1,22 @@
 # Zeus Roadmap
 
 Rule for every stage: fetch the cited CPW page(s) into `Reference/` *before*
-writing the feature, implement it, measure its Elo with `zeus-bench` against
-the Stockfish calibration ladder (see `Reference/testing/Match_Statistics.md`
-and `docs/CALIBRATION.md`), record the result in `ELO_LOG.md`, then commit
-and push. A stage is not "done" until its Elo delta is measured and logged.
+writing the feature, implement it, measure its Elo with `zeus-bench`'s
+round-robin tournament against the Stockfish Elo roster (methodology fixed
+in `ELO_LOG.md`'s header: 100 games/pair, 1-minute bullet, rated with the
+real `bayeselo` CLI — see `Reference/testing/BayesElo.md`), record the
+result in `ELO_LOG.md`, then commit and push. A stage is not "done" until
+its Elo delta is measured and logged.
 
 ## Done
 
 - [x] v0.1 — Negamax + Alpha-Beta (fixed depth) + material-only eval
       (`Reference/search/Negamax.md`, `Reference/search/Alpha-Beta.md`,
       `Reference/evaluation/Simplified_Evaluation_Function.md`).
-      Measured: **~1141 Elo** (95% CI 984..1249) vs Stockfish's UCI_Elo
-      floor of 1320 — see `ELO_LOG.md`.
+      Measured (superseded single-pair methodology): **~1141 Elo** (95% CI
+      984..1249) vs Stockfish's UCI_Elo floor of 1320. Re-measured with the
+      current tournament methodology (round-robin, 1000 games, 1+0 bullet,
+      bayeselo): **~1081 Elo** — see `ELO_LOG.md`.
 
 ## Planned, in order
 
