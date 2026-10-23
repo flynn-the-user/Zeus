@@ -1,0 +1,10 @@
+[package]
+name = "zeus-bench"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "zeus-bench"
+path = "src/main.rs"
+
+[dependencies]

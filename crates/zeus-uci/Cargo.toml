@@ -1,0 +1,12 @@
+[package]
+name = "zeus-uci"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "zeus-uci"
+path = "src/main.rs"
+
+[dependencies]
+zeus-engine = { path = "../zeus-engine" }
+chess = "3.2.0"
