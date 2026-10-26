@@ -9,8 +9,13 @@ management, move ordering) or *how strength is measured*.
 
 | Decision | File(s) | Reference |
 |---|---|---|
-| Fixed-depth recursive search, side-to-move-relative score sign convention | `crates/zeus-engine/src/search.rs` | `Reference/search/Negamax.md` |
+| Recursive search, side-to-move-relative score sign convention | `crates/zeus-engine/src/search.rs` | `Reference/search/Negamax.md` |
 | Alpha-beta pruning, fail-soft negamax form | `crates/zeus-engine/src/search.rs` | `Reference/search/Alpha-Beta.md` |
+| Iterative deepening (depth 1,2,3,... until time/stop), discard an aborted iteration and keep the last fully-completed one | `crates/zeus-engine/src/search.rs::search_iterative` | `Reference/search/Iterative_Deepening.md` |
+| Depth-1 / first-root-move fallback so an abort can never leave zero candidate moves (Zeus's own addition, noted as such in the reference file) | `crates/zeus-engine/src/search.rs::search_root_once` | `Reference/search/Iterative_Deepening.md` (explicitly marked as not from this page) |
+| Soft bound = `time_left/20 + increment/2`; soft checked between ID iterations, hard checked every 2048 nodes during search | `crates/zeus-uci/src/time.rs`, `crates/zeus-engine/src/search.rs::SearchContext` | `Reference/search/Time_Management.md` |
+| Hard-bound formula (`min(soft*4, time_left/2)`) and the 2048-node check interval | `crates/zeus-uci/src/time.rs`, `crates/zeus-engine/src/search.rs` | Not from the reference — `Reference/search/Time_Management.md` explicitly gives no formula for the hard bound, only that it exists; documented as Zeus's own engineering choice in both files. |
+| Async `stop`: search runs on a background thread, `stop` sets a shared `AtomicBool` checked periodically by the search | `crates/zeus-uci/src/main.rs` | `Reference/protocols/UCI_Protocol.md` (`stop`, and `isready` must answer immediately even while searching) |
 | Material-only evaluation, piece values 100/320/330/500/900 | `crates/zeus-engine/src/eval.rs` | `Reference/evaluation/Simplified_Evaluation_Function.md`, `Reference/evaluation/Point_Value.md` (Michniewski 1995 set) |
 | UCI command set implemented (`uci`, `isready`, `position`, `go`, `stop`, `ucinewgame`, `quit`, `id`, `uciok`, `readyok`, `info`, `bestmove`) | `crates/zeus-uci/src/main.rs` | `Reference/protocols/UCI_Protocol.md` |
 | Pairwise Elo estimate (quick cross-check only): `Δ = 400·log10(E/(1-E))`, `engine_elo = opponent_elo + Δ` | `crates/zeus-bench/src/elo.rs` | `Reference/testing/Match_Statistics.md` |
