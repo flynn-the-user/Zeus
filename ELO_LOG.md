@@ -69,12 +69,15 @@ v0.2 entry below):** this run used no opening suite — every game started
 from the plain startpos. Zeus's v0.1 search is fully deterministic, so an
 unknown fraction of these 1000 games were likely near-duplicates of each
 other rather than independent samples, meaning the effective sample size
-was smaller than 1000 and the reported confidence interval is
-optimistic. The direction/rough magnitude of the result is still useful as
-a historical baseline, but it was not re-run with the opening-suite fix
-applied (the compute cost wasn't judged worth it for a number that's
-already superseded by v0.2 below) — treat it as indicative, not as precise
-as the v0.2+ measurements.
+was smaller than 1000 and the reported confidence interval is optimistic.
+
+**Resolved**: re-run with the opening-suite fix applied, matched to v0.2's
+exact methodology (same roster, same 24 games/pair, same TC) — see
+"v0.1 rebaseline" below. The clean result (1050 Elo) landed within ~30
+points of this flawed one (1081), so the duplication concern, while a
+real methodology bug worth fixing, did not meaningfully bias this
+particular point estimate. The table below is kept for history; the
+rebaseline is what v0.2's delta is actually computed against.
 
 Engine unchanged from the superseded measurement above: negamax+alpha-beta,
 fixed depth 4, material-only eval. Full raw game log:
@@ -135,6 +138,35 @@ Takeaways for the next roadmap stage (`ROADMAP.md`):
 - Next stage (iterative deepening + time management) should re-run this
   exact command/roster for a before/after comparison.
 
+## v0.1 rebaseline — same engine, fixed opening-suite methodology
+
+Purpose: v0.2 below was measured with the opening-suite fix in place,
+but the v0.1 number above wasn't — comparing them directly would confound
+"engine got better" with "measurement method changed." This re-runs the
+*exact same v0.1 binary* (built from commit `d004267`, via a throwaway
+`git worktree`, no code changes) through the *current* harness
+(opening suite, 24 games/pair, same roster/TC as v0.2), so there is
+exactly one variable between this and v0.2: the engine. Full game log:
+`results/zeus_v0.1_rebaseline_tournament.pgn` + `.moves.log` (committed,
+240 games).
+
+| Participant | Raw (bayeselo) | Calibrated real Elo | +/- | Games | Score% | Draws% |
+|---|---|---|---|---|---|---|
+| Stockfish-1900 | 249 | **1866** | 69/62 | 96 | 81% | 4% |
+| Stockfish-1700 | 144 | **1709** | 61/58 | 96 | 69% | 7% |
+| Stockfish-1500 | 44 | **1559** | 58/57 | 96 | 55% | 2% |
+| Stockfish-1320 | -139 | **1286** | 58/61 | 96 | 32% | 8% |
+| **Zeus-v0.1-rebaseline** | -297 | **1050** | 65/75 | 96 | 12% | 9% |
+
+`real_elo = 1493.8 + 1.4932*raw_elo` (re-fit on this tournament's own
+anchor games, same method as every other entry here).
+
+**Zeus v0.1 (rebaselined) ≈ 1050 Elo** — close to the original flawed
+measurement (1081), confirming that run's duplication risk didn't
+meaningfully bias the point estimate in this case, even though fixing it
+was still the right call for future measurements' validity. **This 1050
+figure, not 1081, is the correct baseline for v0.2's delta below.**
+
 ## v0.2 — iterative deepening + time management
 
 Commit: `4cea1f8` ("Add iterative deepening + time management, async UCI
@@ -152,11 +184,10 @@ Roster unchanged (Zeus, Stockfish-1320/1500/1700/1900), but
 engine actually uses its clock, games take ~60-120s each instead of a few
 seconds, and 1000 games would have taken ~4-5 hours; 240 games (~1.5
 hours, run across 2 relaunches) was judged a reasonable trade of sample
-size for turnaround, confirmed with the user before running. This is also
-the **first measurement with the opening-suite fix** applied (see the
-v0.1 caveat above), so it is not a perfectly clean before/after on sample
-methodology alone — but the Elo movement here is large enough that this
-doesn't change the conclusion.
+size for turnaround, confirmed with the user before running. Methodology
+here matches the "v0.1 rebaseline" section above exactly (same opening
+suite, same 24 games/pair, same roster/TC), so the delta below is a clean
+single-variable (engine only) comparison.
 
 | Participant | Raw (bayeselo) | Calibrated real Elo | +/- | Games | Score% | Draws% |
 |---|---|---|---|---|---|---|
@@ -171,11 +202,12 @@ method as v0.1, re-fit on this tournament's own anchor games — not reused
 from v0.1's fit, since anchor behavior can itself shift with the opening
 suite now in play).
 
-**Zeus v0.2 ≈ 1325 Elo, up from v0.1's ≈1081 Elo (+~244 Elo).** This is a
+**Zeus v0.2 ≈ 1325 Elo, up from the matched-methodology v0.1 rebaseline's
+≈1050 Elo: +275 Elo, single-variable (engine-only) comparison.** This is a
 large, unambiguous jump, and it shows up directly in the raw scores too:
-Zeus-v0.2 now scores 47.9% against Stockfish-1320 (up from 28.5% for
-v0.1) and actually out-rates Stockfish-1320 in the joint fit (1325 vs
-1281) for the first time. Entirely attributable to search depth: v0.1 was
+Zeus-v0.2 now scores 47.9% against Stockfish-1320 (up from 33.3% for the
+v0.1 rebaseline) and actually out-rates Stockfish-1320 in the joint fit
+(1325 vs 1281) for the first time. Entirely attributable to search depth: v0.1 was
 hard-capped at 4 plies; v0.2 reaches depth 7+ within a few hundred ms in
 early/middlegame positions (observed in `info depth` output during
 development) and deeper still given the fuller ~3s/move soft budget at

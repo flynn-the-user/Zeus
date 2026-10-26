@@ -19,12 +19,15 @@ logged.
       984..1249) vs Stockfish's UCI_Elo floor of 1320. Re-measured with the
       tournament methodology (round-robin, 1000 games, 1+0 bullet,
       bayeselo, no opening suite yet — see its caveat in `ELO_LOG.md`):
-      **~1081 Elo**.
+      **~1081 Elo**. Rebaselined with the opening-suite fix, matched
+      exactly to v1's methodology below: **~1050 Elo** — this is the
+      number v1's delta is computed against.
 - [x] v1 **Iterative Deepening** + **Time Management**
       (`Reference/search/Iterative_Deepening.md`,
       `Reference/search/Time_Management.md`) + async UCI `stop`. Measured
       (round-robin, 240 games, 1-minute bullet, 12-opening suite,
-      bayeselo): **~1325 Elo**, up ~244 from v0.1 — see `ELO_LOG.md`.
+      bayeselo): **~1325 Elo**, up **+275** from the matched-methodology
+      v0.1 rebaseline (single-variable comparison) — see `ELO_LOG.md`.
 
 ## Planned, in order
 
