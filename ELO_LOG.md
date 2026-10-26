@@ -57,6 +57,18 @@ for the first tournament result.
 
 ## v0.1 — tournament calibration (round-robin + bayeselo, bullet)
 
+**Caveat found later (see `Reference/testing/Engine_Testing.md` and the
+v0.2 entry below):** this run used no opening suite — every game started
+from the plain startpos. Zeus's v0.1 search is fully deterministic, so an
+unknown fraction of these 1000 games were likely near-duplicates of each
+other rather than independent samples, meaning the effective sample size
+was smaller than 1000 and the reported confidence interval is
+optimistic. The direction/rough magnitude of the result is still useful as
+a historical baseline, but it was not re-run with the opening-suite fix
+applied (the compute cost wasn't judged worth it for a number that's
+already superseded by v0.2 below) — treat it as indicative, not as precise
+as the v0.2+ measurements.
+
 Engine unchanged from the superseded measurement above: negamax+alpha-beta,
 fixed depth 4, material-only eval. Full raw game log:
 `results/zeus_v0.1_tournament.pgn` (committed, 1000 games).
