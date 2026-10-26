@@ -17,6 +17,7 @@
 mod bayeselo;
 mod elo;
 mod game;
+mod openings;
 mod pgn;
 mod uci_client;
 
@@ -162,6 +163,7 @@ struct GameSpec {
     pair: (usize, usize),
     white_idx: usize,
     black_idx: usize,
+    opening_idx: usize,
 }
 
 /// Parses games already written by a previous (possibly interrupted) run of
@@ -283,15 +285,17 @@ fn main() {
             let remaining = args.games_per_pair.saturating_sub(done_for_pair);
             for g in 0..remaining {
                 // Keep alternating from wherever the previous run left off.
-                let (white_idx, black_idx) = if (done_for_pair + g) % 2 == 0 {
-                    (i, j)
-                } else {
-                    (j, i)
-                };
+                // Per Reference/testing/Engine_Testing.md: each opening is
+                // played twice, colors reversed, before moving to the next
+                // opening in the suite.
+                let seq = done_for_pair + g;
+                let (white_idx, black_idx) = if seq % 2 == 0 { (i, j) } else { (j, i) };
+                let opening_idx = (seq / 2) as usize % openings::SUITE.len();
                 queue.push_back(GameSpec {
                     pair: (i, j),
                     white_idx,
                     black_idx,
+                    opening_idx,
                 });
             }
         }
@@ -318,10 +322,21 @@ fn main() {
         .append(true)
         .open(&args.pgn_out)
         .expect("open --pgn-out for append");
+    // Sidecar log with the actual move list per game (the PGN itself is
+    // kept minimal for bayeselo, see src/pgn.rs) - this is what makes it
+    // possible to audit that games from the same opening pair actually
+    // diverge instead of replaying the same game.
+    let moves_log_path = format!("{}.moves.log", args.pgn_out);
+    let moves_log = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&moves_log_path)
+        .expect("open moves log for append");
 
     let queue = Arc::new(Mutex::new(queue));
     let participants = Arc::new(participants);
     let pgn_file = Arc::new(Mutex::new(pgn_file));
+    let moves_log = Arc::new(Mutex::new(moves_log));
     let pair_results = Arc::new(Mutex::new(pair_results));
     let done = Arc::new(AtomicUsize::new(0));
     let round_counter = Arc::new(AtomicUsize::new(1));
@@ -331,6 +346,7 @@ fn main() {
             let queue = Arc::clone(&queue);
             let participants = Arc::clone(&participants);
             let pgn_file = Arc::clone(&pgn_file);
+            let moves_log = Arc::clone(&moves_log);
             let pair_results = Arc::clone(&pair_results);
             let done = Arc::clone(&done);
             let round_counter = Arc::clone(&round_counter);
@@ -365,7 +381,9 @@ fn main() {
                 let _ = white.sync();
                 let _ = black.sync();
 
-                let record = play_game(&mut white, &mut black, tc, max_plies);
+                let opening = &openings::SUITE[spec.opening_idx];
+                let opening_moves: Vec<String> = opening.moves.iter().map(|s| s.to_string()).collect();
+                let record = play_game(&mut white, &mut black, &opening_moves, tc, max_plies);
                 white.quit();
                 black.quit();
 
@@ -375,6 +393,7 @@ fn main() {
                     round,
                     &white_p.name,
                     &black_p.name,
+                    opening.name,
                     record.outcome,
                 );
                 // Written and flushed immediately, one game at a time, so
@@ -386,6 +405,20 @@ fn main() {
                     let mut f = pgn_file.lock().unwrap();
                     let _ = f.write_all(pgn_text.as_bytes());
                     let _ = f.write_all(b"\n");
+                    let _ = f.flush();
+                }
+                {
+                    let mut f = moves_log.lock().unwrap();
+                    let _ = writeln!(
+                        f,
+                        "round={round} white={} black={} opening=\"{}\" result={} plies={} moves={}",
+                        white_p.name,
+                        black_p.name,
+                        opening.name,
+                        pgn::result_token(record.outcome),
+                        record.plies,
+                        record.moves.join(" ")
+                    );
                     let _ = f.flush();
                 }
 
@@ -446,8 +479,8 @@ fn main() {
     }
 
     println!(
-        "\nAll games written incrementally to {} as they finished.",
-        args.pgn_out
+        "\nAll games written incrementally to {} (ratings input) and {} (full move lists, for audit) as they finished.",
+        args.pgn_out, moves_log_path
     );
 
     println!("\n--- bayeselo ratings (authoritative, joint fit over all participants) ---");

@@ -45,19 +45,42 @@ pub struct GameRecord {
     pub outcome: Outcome,
     pub reason: EndReason,
     pub plies: u32,
+    /// Full move list (opening + timed play), UCI long-algebraic, for the
+    /// human-auditable sidecar log (`crates/zeus-bench/src/main.rs`) - the
+    /// minimal PGN written for bayeselo deliberately omits movetext (see
+    /// `src/pgn.rs`), so this is the only place a game's actual moves are
+    /// recorded, which matters for verifying games from the same opening
+    /// pair actually diverge.
+    pub moves: Vec<String>,
 }
 
+fn apply_uci_moves(mut board: Board, moves: &[String]) -> Board {
+    for mv_str in moves {
+        if let Ok(mv) = ChessMove::from_str(mv_str) {
+            board = board.make_move_new(mv);
+        }
+    }
+    board
+}
+
+/// `opening_moves` (per `Reference/testing/Engine_Testing.md`'s "opening
+/// suite" guidance - see `crates/zeus-bench/src/openings.rs`) are applied
+/// to both engines before any clock time is spent: they're set via
+/// `position ... moves ...` the same way ongoing game moves are, just
+/// never behind a timed `go`.
 pub fn play_game(
     white: &mut UciEngine,
     black: &mut UciEngine,
+    opening_moves: &[String],
     tc: TimeControl,
     max_plies: u32,
 ) -> GameRecord {
     let _ = white.new_game();
     let _ = black.new_game();
 
-    let mut board = Board::default();
-    let mut uci_moves: Vec<String> = Vec::new();
+    let mut board = apply_uci_moves(Board::default(), opening_moves);
+    let mut uci_moves: Vec<String> = opening_moves.to_vec();
+    let opening_plies = opening_moves.len() as u32;
     let mut white_ms = tc.base_ms;
     let mut black_ms = tc.base_ms;
     let mut repetition: HashMap<u64, u32> = HashMap::new();
@@ -96,7 +119,8 @@ pub fn play_game(
                     Outcome::WhiteWins
                 },
                 reason: EndReason::Timeout,
-                plies: ply,
+                plies: ply + opening_plies,
+                moves: uci_moves.clone(),
             };
         }
 
@@ -110,7 +134,8 @@ pub fn play_game(
                         Outcome::WhiteWins
                     },
                     reason: EndReason::IllegalOrNoMove,
-                    plies: ply,
+                    plies: ply + opening_plies,
+                    moves: uci_moves.clone(),
                 };
             }
         };
@@ -125,7 +150,8 @@ pub fn play_game(
                         Outcome::WhiteWins
                     },
                     reason: EndReason::IllegalOrNoMove,
-                    plies: ply,
+                    plies: ply + opening_plies,
+                    moves: uci_moves.clone(),
                 };
             }
         };
@@ -150,14 +176,16 @@ pub fn play_game(
                         Outcome::BlackWins
                     },
                     reason: EndReason::Checkmate,
-                    plies: ply + 1,
+                    plies: ply + 1 + opening_plies,
+                    moves: uci_moves.clone(),
                 };
             }
             BoardStatus::Stalemate => {
                 return GameRecord {
                     outcome: Outcome::Draw,
                     reason: EndReason::Stalemate,
-                    plies: ply + 1,
+                    plies: ply + 1 + opening_plies,
+                    moves: uci_moves.clone(),
                 };
             }
             BoardStatus::Ongoing => {}
@@ -167,7 +195,8 @@ pub fn play_game(
             return GameRecord {
                 outcome: Outcome::Draw,
                 reason: EndReason::FiftyMoveRule,
-                plies: ply + 1,
+                plies: ply + 1 + opening_plies,
+                moves: uci_moves.clone(),
             };
         }
 
@@ -175,7 +204,8 @@ pub fn play_game(
             return GameRecord {
                 outcome: Outcome::Draw,
                 reason: EndReason::InsufficientMaterial,
-                plies: ply + 1,
+                plies: ply + 1 + opening_plies,
+                moves: uci_moves.clone(),
             };
         }
 
@@ -185,7 +215,8 @@ pub fn play_game(
             return GameRecord {
                 outcome: Outcome::Draw,
                 reason: EndReason::ThreefoldRepetition,
-                plies: ply + 1,
+                plies: ply + 1 + opening_plies,
+                moves: uci_moves.clone(),
             };
         }
     }
@@ -193,7 +224,8 @@ pub fn play_game(
     GameRecord {
         outcome: Outcome::Draw,
         reason: EndReason::MaxPlies,
-        plies: max_plies,
+        plies: max_plies + opening_plies,
+        moves: uci_moves.clone(),
     }
 }
 

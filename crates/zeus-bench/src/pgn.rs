@@ -18,9 +18,20 @@ pub fn result_token(outcome: Outcome) -> &'static str {
     }
 }
 
-pub fn format_game(event: &str, round: usize, white: &str, black: &str, outcome: Outcome) -> String {
+pub fn format_game(
+    event: &str,
+    round: usize,
+    white: &str,
+    black: &str,
+    opening_name: &str,
+    outcome: Outcome,
+) -> String {
     let result = result_token(outcome);
+    // [Opening] is a non-standard but harmless extra tag (standard PGN
+    // readers ignore unrecognized tags) - kept here purely so a quick
+    // `grep` of the PGN shows which opening each game used, per
+    // Reference/testing/Engine_Testing.md.
     format!(
-        "[Event \"{event}\"]\n[Round \"{round}\"]\n[White \"{white}\"]\n[Black \"{black}\"]\n[Result \"{result}\"]\n\n{result}\n"
+        "[Event \"{event}\"]\n[Round \"{round}\"]\n[White \"{white}\"]\n[Black \"{black}\"]\n[Result \"{result}\"]\n[Opening \"{opening_name}\"]\n\n{result}\n"
     )
 }
