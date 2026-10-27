@@ -13,8 +13,13 @@
 //!   deadline this module is abortable against (soft bound is enforced by
 //!   the caller deciding whether to start another iteration; hard bound is
 //!   enforced here, mid-search, via periodic checks).
+//! - `Reference/search/Quiescence_Search.md` — `quiesce` below, which
+//!   `alpha_beta` now calls at `depth_left == 0` instead of `evaluate()`
+//!   directly (that page's own pseudocode is for the negamax framework and
+//!   already named this `quiesce(alpha, beta)` call; v0.1/v1 used
+//!   `evaluate()` there as a documented stopgap until this stage).
 use crate::eval::evaluate;
-use chess::{Board, BoardStatus, ChessMove, MoveGen};
+use chess::{Board, BoardStatus, ChessMove, MoveGen, EMPTY};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
@@ -83,7 +88,7 @@ fn alpha_beta(board: &Board, mut alpha: i32, beta: i32, depth_left: u32, ctx: &m
         return score;
     }
     if depth_left == 0 {
-        return evaluate(board);
+        return quiesce(board, alpha, beta, ctx);
     }
 
     let mut best_value = -MATE_VALUE - 1;
@@ -101,6 +106,63 @@ fn alpha_beta(board: &Board, mut alpha: i32, beta: i32, depth_left: u32, ctx: &m
         }
         if score >= beta {
             return best_value;
+        }
+    }
+    best_value
+}
+
+/// Captures-only search to a quiet position, per
+/// `Reference/search/Quiescence_Search.md`'s pseudocode: stand-pat as the
+/// initial lower bound (unless in check, where stand-pat is disallowed and
+/// all legal evasions are searched instead), then try captures to see if
+/// any beat it, with the same alpha-beta cutoffs as the main search.
+fn quiesce(board: &Board, mut alpha: i32, beta: i32, ctx: &mut SearchContext) -> i32 {
+    ctx.visit_node();
+    if ctx.stop.load(Ordering::Relaxed) {
+        return 0; // discarded by the caller
+    }
+    if let Some(score) = terminal_score(board) {
+        return score;
+    }
+
+    let in_check = *board.checkers() != EMPTY;
+
+    let mut best_value;
+    let mut moves = MoveGen::new_legal(board);
+    if in_check {
+        // "If in check, stand-pat is disallowed and all evasions must be
+        // searched" - every legal move is an evasion, so no mask needed.
+        best_value = -MATE_VALUE - 1;
+    } else {
+        let stand_pat = evaluate(board);
+        best_value = stand_pat;
+        if best_value >= beta {
+            return best_value;
+        }
+        if best_value > alpha {
+            alpha = best_value;
+        }
+        // Captures only: moves landing on an opponent-occupied square.
+        // Known simplification (not addressed by this reference page):
+        // en passant captures land on an empty square and are missed by
+        // this mask, same as most simple engines' first quiescence pass.
+        moves.set_iterator_mask(*board.color_combined(!board.side_to_move()));
+    }
+
+    for mv in moves {
+        let child = board.make_move_new(mv);
+        let score = -quiesce(&child, -beta, -alpha, ctx);
+        if ctx.stop.load(Ordering::Relaxed) {
+            return best_value;
+        }
+        if score >= beta {
+            return score;
+        }
+        if score > best_value {
+            best_value = score;
+        }
+        if score > alpha {
+            alpha = score;
         }
     }
     best_value
