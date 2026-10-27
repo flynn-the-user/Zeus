@@ -233,3 +233,77 @@ Takeaways for the next roadmap stage (`ROADMAP.md`):
   horizon-effect blunders that a depth-limited, capture-blind search
   (even an iteratively-deepened one) is still prone to at the exact ply
   where search stops.
+
+## v1.1 — quiescence search
+
+Commit: `8afbd1a` ("Add quiescence search to fix the horizon effect").
+Engine change from v0.2: `alpha_beta`'s leaf now calls `quiesce()`
+(`Reference/search/Quiescence_Search.md`) instead of `evaluate()`
+directly. Methodology identical to v0.2 (same roster, 24 games/pair,
+opening suite, TC) — a clean single-variable comparison, no rebaseline
+needed. Full game log: `results/zeus_v1.1_qs_tournament.pgn` + `.moves.log`
+(committed, 240 games).
+
+| Participant | Raw (bayeselo) | Calibrated real Elo | +/- | Games | Score% | Draws% |
+|---|---|---|---|---|---|---|
+| Stockfish-1900 | 288 | **1876** | 76/66 | 96 | 86% | 3% |
+| Stockfish-1500 | 76 | **1637** | 58/56 | 96 | 61% | 6% |
+| Stockfish-1700 | 35 | **1590** | 57/55 | 96 | 56% | 7% |
+| **Zeus-v1.1-QS** | -192 | **1334** | 57/61 | 96 | 24% | 13% |
+| Stockfish-1320 | -207 | **1318** | 58/64 | 96 | 23% | 8% |
+
+`real_elo = 1550.9 + 1.1272*raw_elo`.
+
+**Zeus v1.1 ≈ 1334 Elo, vs v0.2's ≈1325 Elo: +9 Elo — not a
+statistically meaningful change at this sample size.** Reporting this
+plainly rather than spinning it: quiescence search did not produce a
+measurable Elo gain in this 96-games-per-anchor measurement.
+
+**Why this result should be read with real skepticism about the
+measurement itself, not just the feature:** Stockfish-1500 rates *above*
+Stockfish-1700 in this run's bayeselo fit (1637 vs 1590), inverted from
+their nominal UCI_Elo ordering, driven by Stockfish-1500 beating
+Stockfish-1700 68.8% of their 24 head-to-head games. Two engine settings
+with a nominal 200-point gap landing inverted at this sample size is
+direct evidence that the noise floor at 24 games/pair is comparable to
+(or larger than) the kind of Elo delta a single incremental feature like
+quiescence search is likely to produce. A real +9 Elo signal is simply
+not resolvable against that much noise — this result is consistent with
+"no gain," "a modest real gain masked by noise," and "a modest real loss
+masked by noise" all at once.
+
+What *is* solid evidence the feature works correctly, independent of the
+noisy Elo number: qualitative behavior observed during development
+(`crates/zeus-uci` manual testing, not part of the tournament) — before
+this change, `info depth N score cp ...` output for the startpos
+oscillated (e.g. depth 5 `cp 100`, depth 6 `cp -100`, depth 7 `cp 100`
+in one `go movetime 500` session), the signature of exactly the
+horizon-effect swings this page describes; after this change the same
+kind of session is stable (`cp 0` at every depth for the startpos). The
+mechanism is demonstrably fixed; its Elo contribution at this specific
+time control, sample size, and (still material-only, still
+move-ordering-free) engine configuration is not resolved by this
+measurement.
+
+Plausible (unproven) reasons the Elo contribution might be genuinely
+small *right now*, to revisit once later stages land:
+- No move ordering yet in quiescence (next stage) — `Reference/search/Quiescence_Search.md`
+  itself flags unordered captures as inefficient, so quiescence may be
+  spending search-time budget less effectively than it will once MVV-LVA
+  lands, partially offsetting its tactical benefit within the same clock.
+- Material-only evaluation has little "positional quiet" to protect in
+  the first place — quiescence mainly guards against mis-evaluating
+  tactical capture sequences, which may not be the dominant blunder
+  source yet compared to purely positional blind spots a material-only
+  evaluator can't see regardless of search depth.
+
+Takeaways for the next roadmap stage (`ROADMAP.md`):
+- Treat single-stage deltas skeptically below roughly 50-100 Elo at this
+  24-games/pair sample size — the anchor-inversion above is the evidence.
+  Consider this when move ordering (small, incremental gain expected) is
+  measured next: a clean result either way should be read in light of
+  this noise floor, not over-interpreted.
+- Move ordering (MVV-LVA) is next regardless — it's both the
+  CPW-recommended prerequisite for efficient quiescence and expected to
+  help the main search's alpha-beta pruning directly, so a larger,
+  easier-to-resolve gain is plausible there.

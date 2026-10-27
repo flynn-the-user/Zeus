@@ -28,27 +28,40 @@ logged.
       (round-robin, 240 games, 1-minute bullet, 12-opening suite,
       bayeselo): **~1325 Elo**, up **+275** from the matched-methodology
       v0.1 rebaseline (single-variable comparison) — see `ELO_LOG.md`.
+- [x] v1.1 **Quiescence Search** (`Reference/search/Quiescence_Search.md`)
+      at the main search's leaf, with check-evasion handling per that
+      page's explicit requirement. Measured (round-robin, 240 games,
+      1-minute bullet, same methodology as v1, no rebaseline needed):
+      **~1334 Elo**, +9 from v1 — **not a statistically meaningful
+      change at this sample size** (see `ELO_LOG.md`'s noise-floor
+      discussion: a known anchor pair inverted their nominal Elo order in
+      this same run). Feature correctness confirmed qualitatively
+      instead (horizon-effect score oscillation present before, gone
+      after); its Elo contribution at the current (still
+      move-ordering-free, material-only) configuration is not resolved
+      by this measurement and should be revisited once move ordering
+      lands.
 
 ## Planned, in order
 
-1. **Quiescence Search** (captures-only search at leaf nodes to avoid the
-   horizon effect) — needs `Reference/search/Quiescence_Search.md`.
-2. **Move Ordering**: MVV-LVA for captures, killer-move heuristic for quiets
+1. **Move Ordering**: MVV-LVA for captures, killer-move heuristic for quiets
    — needs `Reference/search/Move_Ordering.md`, `Reference/search/MVV-LVA.md`,
-   `Reference/search/Killer_Heuristic.md`.
-3. **Transposition Table** with **Zobrist Hashing** — needs
+   `Reference/search/Killer_Heuristic.md`. Also the CPW-recommended
+   prerequisite for efficient quiescence search (v1.1 above runs
+   unordered for now).
+2. **Transposition Table** with **Zobrist Hashing** — needs
    `Reference/search/Transposition_Table.md`, `Reference/search/Zobrist_Hashing.md`.
-4. **Piece-Square Tables** added to evaluation (isolate their Elo contribution
+3. **Piece-Square Tables** added to evaluation (isolate their Elo contribution
    from the search-side gains above) — needs
    `Reference/evaluation/Piece-Square_Tables.md`.
-5. **Aspiration Windows** around the previous iteration's score.
-6. **Null Move Pruning**.
-7. **Principal Variation Search** (replace plain alpha-beta).
-8. **Late Move Reductions**.
-9. **King Safety / Mobility / Pawn Structure** evaluation terms.
-10. (stretch) **NNUE** evaluation — large scope increase (training data,
-    network format); only attempted after 1–9 are measured and logged, and
-    only with its own dedicated Reference fetch + citation set.
+4. **Aspiration Windows** around the previous iteration's score.
+5. **Null Move Pruning**.
+6. **Principal Variation Search** (replace plain alpha-beta).
+7. **Late Move Reductions**.
+8. **King Safety / Mobility / Pawn Structure** evaluation terms.
+9. (stretch) **NNUE** evaluation — large scope increase (training data,
+   network format); only attempted after 1–8 are measured and logged, and
+   only with its own dedicated Reference fetch + citation set.
 
 Each numbered stage gets its own commit(s) and its own `ELO_LOG.md` entry
 showing before/after Elo with confidence interval, per
