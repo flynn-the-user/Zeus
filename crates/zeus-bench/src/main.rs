@@ -49,6 +49,10 @@ struct Args {
     max_plies: u32,
     pgn_out: String,
     bayeselo_path: String,
+    /// Ablation-study flag (see `crates/zeus-engine/src/search.rs`'s module
+    /// doc comment / `CITATIONS.md`'s `UseQuiescence` row), `None` means
+    /// "don't send setoption, let Zeus use its default".
+    use_quiescence: Option<bool>,
 }
 
 fn parse_args() -> Args {
@@ -67,6 +71,7 @@ fn parse_args() -> Args {
     let mut max_plies = 240u32;
     let mut pgn_out = "results/tournament.pgn".to_string();
     let mut bayeselo_path = default_bayeselo_path();
+    let mut use_quiescence: Option<bool> = None;
 
     let argv: Vec<String> = std::env::args().skip(1).collect();
     let mut i = 0;
@@ -119,6 +124,10 @@ fn parse_args() -> Args {
                 bayeselo_path = argv[i + 1].clone();
                 i += 2;
             }
+            "--use-quiescence" => {
+                use_quiescence = Some(argv[i + 1].parse().expect("--use-quiescence is true or false"));
+                i += 2;
+            }
             other => {
                 eprintln!("unknown argument: {other}");
                 std::process::exit(2);
@@ -138,6 +147,7 @@ fn parse_args() -> Args {
         max_plies,
         pgn_out,
         bayeselo_path,
+        use_quiescence,
     }
 }
 
@@ -223,10 +233,14 @@ fn main() {
         std::process::exit(1);
     }
 
+    let mut zeus_options = vec![];
+    if let Some(uq) = args.use_quiescence {
+        zeus_options.push(("UseQuiescence".to_string(), uq.to_string()));
+    }
     let mut participants = vec![Participant {
         name: args.engine_label.clone(),
         cmd: args.engine_cmd.clone(),
-        options: vec![],
+        options: zeus_options,
     }];
     for &elo_target in &args.roster_elo {
         participants.push(Participant {
