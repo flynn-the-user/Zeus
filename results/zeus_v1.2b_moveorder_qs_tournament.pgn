@@ -1,0 +1,2160 @@
+[Event "Zeus tournament"]
+[Round "1"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1320"]
+[Result "1/2-1/2"]
+[Opening "Open Sicilian"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "2"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1320"]
+[Result "1/2-1/2"]
+[Opening "Italian Game"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "3"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Ruy Lopez"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "4"]
+[White "Stockfish-1320"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1/2-1/2"]
+[Opening "Italian Game"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "5"]
+[White "Stockfish-1320"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1-0"]
+[Opening "Ruy Lopez"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "6"]
+[White "Stockfish-1320"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "0-1"]
+[Opening "Open Sicilian"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "7"]
+[White "Stockfish-1320"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1/2-1/2"]
+[Opening "French Defense"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "8"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "French Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "9"]
+[White "Stockfish-1320"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1/2-1/2"]
+[Opening "Sicilian Kan"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "10"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Sicilian Kan"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "11"]
+[White "Stockfish-1320"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "0-1"]
+[Opening "Queen's Gambit Declined"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "12"]
+[White "Stockfish-1320"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "0-1"]
+[Opening "Caro-Kann Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "13"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1320"]
+[Result "1/2-1/2"]
+[Opening "Caro-Kann Defense"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "14"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Slav Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "15"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1320"]
+[Result "0-1"]
+[Opening "Queen's Gambit Declined"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "16"]
+[White "Stockfish-1320"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "0-1"]
+[Opening "Slav Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "17"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1320"]
+[Result "1/2-1/2"]
+[Opening "King's Indian Defense"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "18"]
+[White "Stockfish-1320"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1/2-1/2"]
+[Opening "King's Indian Defense"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "19"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1320"]
+[Result "1/2-1/2"]
+[Opening "Nimzo-Indian Defense"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "20"]
+[White "Stockfish-1320"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1/2-1/2"]
+[Opening "Nimzo-Indian Defense"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "21"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "English Opening"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "22"]
+[White "Stockfish-1320"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1/2-1/2"]
+[Opening "Scandinavian Defense"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "23"]
+[White "Stockfish-1320"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1/2-1/2"]
+[Opening "English Opening"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "24"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Scandinavian Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "25"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "Ruy Lopez"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "26"]
+[White "Stockfish-1500"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "0-1"]
+[Opening "Ruy Lopez"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "27"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1500"]
+[Result "0-1"]
+[Opening "Italian Game"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "28"]
+[White "Stockfish-1500"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1/2-1/2"]
+[Opening "Italian Game"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "29"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1500"]
+[Result "1/2-1/2"]
+[Opening "Open Sicilian"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "30"]
+[White "Stockfish-1500"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "0-1"]
+[Opening "Open Sicilian"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "31"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1500"]
+[Result "1/2-1/2"]
+[Opening "Sicilian Kan"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "32"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "French Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "33"]
+[White "Stockfish-1500"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "0-1"]
+[Opening "Sicilian Kan"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "34"]
+[White "Stockfish-1500"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "0-1"]
+[Opening "French Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "35"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1500"]
+[Result "0-1"]
+[Opening "Caro-Kann Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "36"]
+[White "Stockfish-1500"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "0-1"]
+[Opening "Caro-Kann Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "37"]
+[White "Stockfish-1500"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1/2-1/2"]
+[Opening "Queen's Gambit Declined"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "38"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "Queen's Gambit Declined"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "39"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "Slav Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "40"]
+[White "Stockfish-1500"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1/2-1/2"]
+[Opening "Slav Defense"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "41"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1500"]
+[Result "0-1"]
+[Opening "King's Indian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "42"]
+[White "Stockfish-1500"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "0-1"]
+[Opening "King's Indian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "43"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1500"]
+[Result "1/2-1/2"]
+[Opening "Nimzo-Indian Defense"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "44"]
+[White "Stockfish-1500"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1-0"]
+[Opening "Nimzo-Indian Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "45"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1500"]
+[Result "0-1"]
+[Opening "English Opening"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "46"]
+[White "Stockfish-1500"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1-0"]
+[Opening "English Opening"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "47"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1500"]
+[Result "0-1"]
+[Opening "Scandinavian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "48"]
+[White "Stockfish-1500"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1/2-1/2"]
+[Opening "Scandinavian Defense"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "49"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "Ruy Lopez"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "50"]
+[White "Stockfish-1700"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "0-1"]
+[Opening "Ruy Lopez"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "51"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1700"]
+[Result "1/2-1/2"]
+[Opening "Italian Game"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "52"]
+[White "Stockfish-1700"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "0-1"]
+[Opening "Italian Game"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "53"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "Open Sicilian"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "54"]
+[White "Stockfish-1700"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1/2-1/2"]
+[Opening "Open Sicilian"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "55"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "Sicilian Kan"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "56"]
+[White "Stockfish-1700"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "0-1"]
+[Opening "Sicilian Kan"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "57"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "French Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "58"]
+[White "Stockfish-1700"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1-0"]
+[Opening "French Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "59"]
+[White "Stockfish-1700"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1-0"]
+[Opening "Caro-Kann Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "60"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "Caro-Kann Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "61"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1700"]
+[Result "1/2-1/2"]
+[Opening "Queen's Gambit Declined"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "62"]
+[White "Stockfish-1700"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1-0"]
+[Opening "Queen's Gambit Declined"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "63"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "Slav Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "64"]
+[White "Stockfish-1700"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1-0"]
+[Opening "Slav Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "65"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "King's Indian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "66"]
+[White "Stockfish-1700"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "0-1"]
+[Opening "King's Indian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "67"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1700"]
+[Result "1/2-1/2"]
+[Opening "Nimzo-Indian Defense"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "68"]
+[White "Stockfish-1700"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1-0"]
+[Opening "Nimzo-Indian Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "69"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "English Opening"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "70"]
+[White "Stockfish-1700"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1-0"]
+[Opening "English Opening"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "1"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1900"]
+[Result "1-0"]
+[Opening "Italian Game"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "2"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1900"]
+[Result "1-0"]
+[Opening "Ruy Lopez"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "3"]
+[White "Stockfish-1700"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "0-1"]
+[Opening "Scandinavian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "4"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "Scandinavian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "5"]
+[White "Stockfish-1900"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1-0"]
+[Opening "Ruy Lopez"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "6"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "Open Sicilian"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "7"]
+[White "Stockfish-1900"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "0-1"]
+[Opening "Italian Game"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "8"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "Sicilian Kan"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "9"]
+[White "Stockfish-1900"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1-0"]
+[Opening "Open Sicilian"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "10"]
+[White "Stockfish-1900"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1-0"]
+[Opening "Sicilian Kan"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "11"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1900"]
+[Result "1-0"]
+[Opening "French Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "12"]
+[White "Stockfish-1900"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1-0"]
+[Opening "French Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "13"]
+[White "Stockfish-1900"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1/2-1/2"]
+[Opening "Caro-Kann Defense"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "14"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "Caro-Kann Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "15"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "Queen's Gambit Declined"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "16"]
+[White "Stockfish-1900"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1-0"]
+[Opening "Queen's Gambit Declined"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "17"]
+[White "Stockfish-1900"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1-0"]
+[Opening "King's Indian Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "18"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1900"]
+[Result "1-0"]
+[Opening "Slav Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "19"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "King's Indian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "20"]
+[White "Stockfish-1900"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1-0"]
+[Opening "Slav Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "21"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "Scandinavian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "22"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "Nimzo-Indian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "23"]
+[White "Stockfish-1900"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1-0"]
+[Opening "Nimzo-Indian Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "24"]
+[White "Zeus-v1.2-MoveOrder-QS"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "English Opening"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "25"]
+[White "Stockfish-1900"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "0-1"]
+[Opening "English Opening"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "26"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Ruy Lopez"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "27"]
+[White "Stockfish-1900"]
+[Black "Zeus-v1.2-MoveOrder-QS"]
+[Result "1-0"]
+[Opening "Scandinavian Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "28"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Italian Game"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "29"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "Italian Game"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "30"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1500"]
+[Result "1/2-1/2"]
+[Opening "Ruy Lopez"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "31"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1500"]
+[Result "0-1"]
+[Opening "Open Sicilian"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "32"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1500"]
+[Result "0-1"]
+[Opening "French Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "33"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Open Sicilian"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "34"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Sicilian Kan"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "35"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1500"]
+[Result "0-1"]
+[Opening "Sicilian Kan"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "36"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1320"]
+[Result "0-1"]
+[Opening "French Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "37"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1500"]
+[Result "0-1"]
+[Opening "Caro-Kann Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "38"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1320"]
+[Result "0-1"]
+[Opening "Caro-Kann Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "39"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Queen's Gambit Declined"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "40"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1500"]
+[Result "0-1"]
+[Opening "Queen's Gambit Declined"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "41"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1500"]
+[Result "0-1"]
+[Opening "Slav Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "42"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Slav Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "43"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1500"]
+[Result "0-1"]
+[Opening "Nimzo-Indian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "44"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1500"]
+[Result "0-1"]
+[Opening "King's Indian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "45"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "King's Indian Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "46"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1500"]
+[Result "0-1"]
+[Opening "English Opening"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "47"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Nimzo-Indian Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "48"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1500"]
+[Result "0-1"]
+[Opening "Scandinavian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "49"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "English Opening"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "50"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Scandinavian Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "51"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "Ruy Lopez"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "52"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "Italian Game"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "53"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1320"]
+[Result "0-1"]
+[Opening "Ruy Lopez"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "54"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Italian Game"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "55"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "Open Sicilian"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "56"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Open Sicilian"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "57"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Sicilian Kan"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "58"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "Sicilian Kan"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "59"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "French Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "60"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "French Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "61"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "Caro-Kann Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "62"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Caro-Kann Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "63"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "Queen's Gambit Declined"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "64"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1320"]
+[Result "0-1"]
+[Opening "Queen's Gambit Declined"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "65"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "Slav Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "66"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Slav Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "67"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "King's Indian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "68"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1320"]
+[Result "0-1"]
+[Opening "King's Indian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "69"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "Nimzo-Indian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "70"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Nimzo-Indian Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "71"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "English Opening"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "72"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "English Opening"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "73"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Scandinavian Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "74"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "Scandinavian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "75"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "Ruy Lopez"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "76"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "Italian Game"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "77"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Ruy Lopez"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "78"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "Open Sicilian"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "79"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Italian Game"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "1"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "Sicilian Kan"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "2"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "French Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "3"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Open Sicilian"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "4"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "French Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "5"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1320"]
+[Result "0-1"]
+[Opening "Sicilian Kan"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "6"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1900"]
+[Result "1-0"]
+[Opening "Caro-Kann Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "7"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Caro-Kann Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "8"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "Queen's Gambit Declined"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "9"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Queen's Gambit Declined"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "10"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1900"]
+[Result "1-0"]
+[Opening "Slav Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "11"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "King's Indian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "12"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Slav Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "13"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "King's Indian Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "14"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Nimzo-Indian Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "15"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "Nimzo-Indian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "16"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "English Opening"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "17"]
+[White "Stockfish-1320"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "Scandinavian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "18"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "Scandinavian Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "19"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1320"]
+[Result "1-0"]
+[Opening "English Opening"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "20"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "Ruy Lopez"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "21"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "Italian Game"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "22"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "Ruy Lopez"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "23"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "Italian Game"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "24"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1700"]
+[Result "1-0"]
+[Opening "Open Sicilian"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "25"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "Open Sicilian"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "26"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1700"]
+[Result "1-0"]
+[Opening "Sicilian Kan"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "27"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "Sicilian Kan"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "28"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "French Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "29"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1700"]
+[Result "1-0"]
+[Opening "Caro-Kann Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "30"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "French Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "31"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "Queen's Gambit Declined"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "32"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "Caro-Kann Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "33"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1700"]
+[Result "1-0"]
+[Opening "Queen's Gambit Declined"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "34"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1700"]
+[Result "1-0"]
+[Opening "Slav Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "35"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "Slav Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "36"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "King's Indian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "37"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "King's Indian Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "38"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "Nimzo-Indian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "39"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "Nimzo-Indian Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "40"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "English Opening"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "41"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "English Opening"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "42"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1700"]
+[Result "1/2-1/2"]
+[Opening "Scandinavian Defense"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "43"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "Scandinavian Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "44"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "Ruy Lopez"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "45"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "Ruy Lopez"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "46"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "Italian Game"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "47"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "Italian Game"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "48"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "Open Sicilian"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "49"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "Open Sicilian"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "50"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "Sicilian Kan"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "51"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "Sicilian Kan"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "52"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "French Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "53"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "French Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "54"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "Caro-Kann Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "55"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1500"]
+[Result "0-1"]
+[Opening "Caro-Kann Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "56"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "Queen's Gambit Declined"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "57"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "Queen's Gambit Declined"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "58"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1900"]
+[Result "1-0"]
+[Opening "Slav Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "59"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "Slav Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "60"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "King's Indian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "61"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "King's Indian Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "62"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "Nimzo-Indian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "63"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "Nimzo-Indian Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "64"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "English Opening"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "65"]
+[White "Stockfish-1500"]
+[Black "Stockfish-1900"]
+[Result "1-0"]
+[Opening "Scandinavian Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "66"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "English Opening"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "67"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1500"]
+[Result "1-0"]
+[Opening "Scandinavian Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "68"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "Ruy Lopez"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "69"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1900"]
+[Result "1/2-1/2"]
+[Opening "Ruy Lopez"]
+
+1/2-1/2
+
+[Event "Zeus tournament"]
+[Round "70"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "Italian Game"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "71"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "Italian Game"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "72"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1900"]
+[Result "1-0"]
+[Opening "Open Sicilian"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "73"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1700"]
+[Result "1-0"]
+[Opening "Open Sicilian"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "74"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1900"]
+[Result "1-0"]
+[Opening "Sicilian Kan"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "75"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1700"]
+[Result "1-0"]
+[Opening "Sicilian Kan"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "76"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "French Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "77"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1700"]
+[Result "1-0"]
+[Opening "French Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "78"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1900"]
+[Result "1-0"]
+[Opening "Caro-Kann Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "1"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1700"]
+[Result "1-0"]
+[Opening "Slav Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "2"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "Queen's Gambit Declined"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "3"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "Queen's Gambit Declined"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "4"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1700"]
+[Result "1-0"]
+[Opening "Caro-Kann Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "5"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "Slav Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "6"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "King's Indian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "7"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1700"]
+[Result "1-0"]
+[Opening "King's Indian Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "8"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1900"]
+[Result "0-1"]
+[Opening "Nimzo-Indian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "9"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "Nimzo-Indian Defense"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "10"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1900"]
+[Result "1-0"]
+[Opening "English Opening"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "11"]
+[White "Stockfish-1700"]
+[Black "Stockfish-1900"]
+[Result "1-0"]
+[Opening "Scandinavian Defense"]
+
+1-0
+
+[Event "Zeus tournament"]
+[Round "12"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1700"]
+[Result "0-1"]
+[Opening "English Opening"]
+
+0-1
+
+[Event "Zeus tournament"]
+[Round "13"]
+[White "Stockfish-1900"]
+[Black "Stockfish-1700"]
+[Result "1-0"]
+[Opening "Scandinavian Defense"]
+
+1-0
+

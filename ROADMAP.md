@@ -41,26 +41,36 @@ logged.
       move-ordering-free, material-only) configuration is not resolved
       by this measurement and should be revisited once move ordering
       lands.
+- [x] v1.2 **Move Ordering**: MVV-LVA for captures
+      (`Reference/search/MVV-LVA.md`) + killer-move heuristic for quiets
+      (`Reference/search/Killer_Heuristic.md`), per
+      `Reference/search/Move_Ordering.md`'s collapsed tier order for an
+      engine without a hash/PV move or SEE yet. Measured as two
+      tournaments per the user's request, to isolate it from quiescence:
+      **Stage A** (move ordering alone, quiescence off, vs v1's 1325):
+      **~1435 Elo, +110**. **Stage B** (quiescence back on, vs Stage A):
+      **~1529 Elo, +94** — quiescence's contribution is now clearly
+      measurable, confirming v1.1's hypothesis that it was being masked
+      by unordered captures. Net from both features together: **+204**
+      over v1. Full detail (including the temporary `UseQuiescence`
+      ablation toggle) in `ELO_LOG.md`.
 
 ## Planned, in order
 
-1. **Move Ordering**: MVV-LVA for captures, killer-move heuristic for quiets
-   — needs `Reference/search/Move_Ordering.md`, `Reference/search/MVV-LVA.md`,
-   `Reference/search/Killer_Heuristic.md`. Also the CPW-recommended
-   prerequisite for efficient quiescence search (v1.1 above runs
-   unordered for now).
-2. **Transposition Table** with **Zobrist Hashing** — needs
+1. **Transposition Table** with **Zobrist Hashing** — needs
    `Reference/search/Transposition_Table.md`, `Reference/search/Zobrist_Hashing.md`.
-3. **Piece-Square Tables** added to evaluation (isolate their Elo contribution
+   Also expected to unlock a real hash-move for move ordering's top tier
+   (not yet implemented - see `ELO_LOG.md`'s v1.2 takeaways).
+2. **Piece-Square Tables** added to evaluation (isolate their Elo contribution
    from the search-side gains above) — needs
    `Reference/evaluation/Piece-Square_Tables.md`.
-4. **Aspiration Windows** around the previous iteration's score.
-5. **Null Move Pruning**.
-6. **Principal Variation Search** (replace plain alpha-beta).
-7. **Late Move Reductions**.
-8. **King Safety / Mobility / Pawn Structure** evaluation terms.
-9. (stretch) **NNUE** evaluation — large scope increase (training data,
-   network format); only attempted after 1–8 are measured and logged, and
+3. **Aspiration Windows** around the previous iteration's score.
+4. **Null Move Pruning**.
+5. **Principal Variation Search** (replace plain alpha-beta).
+6. **Late Move Reductions**.
+7. **King Safety / Mobility / Pawn Structure** evaluation terms.
+8. (stretch) **NNUE** evaluation — large scope increase (training data,
+   network format); only attempted after 1–7 are measured and logged, and
    only with its own dedicated Reference fetch + citation set.
 
 Each numbered stage gets its own commit(s) and its own `ELO_LOG.md` entry

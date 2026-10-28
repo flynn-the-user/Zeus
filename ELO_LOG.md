@@ -307,3 +307,96 @@ Takeaways for the next roadmap stage (`ROADMAP.md`):
   CPW-recommended prerequisite for efficient quiescence and expected to
   help the main search's alpha-beta pruning directly, so a larger,
   easier-to-resolve gain is plausible there.
+
+## v1.2 — move ordering, as an ablation study against quiescence
+
+Commit: `9776b56` ("Add move ordering (MVV-LVA + killer heuristic) + a
+quiescence toggle"). Per the user's explicit request, measured as two
+separate tournaments instead of one, to isolate move ordering's own
+contribution from quiescence's — both use the methodology fixed above
+(240 games, 24/pair, opening suite, 1-minute bullet, same roster).
+`crates/zeus-uci` grew a temporary `UseQuiescence` UCI option
+(`CITATIONS.md`) purely for this: a debug toggle, not a permanent engine
+feature.
+
+### Stage A: move ordering only (quiescence held OFF, matching v1's config)
+
+Compares directly against **v1's 1325 Elo** (also quiescence-off) — a
+clean single-variable comparison. Full game log:
+`results/zeus_v1.2a_moveorder_noqs_tournament.pgn` + `.moves.log`
+(committed, 240 games).
+
+| Participant | Raw (bayeselo) | Calibrated real Elo | +/- | Games | Score% | Draws% |
+|---|---|---|---|---|---|---|
+| Stockfish-1900 | 248 | **1929** | 72/62 | 96 | 83% | 1% |
+| Stockfish-1700 | 39 | **1628** | 55/54 | 96 | 56% | 4% |
+| Stockfish-1500 | -35 | **1521** | 52/53 | 96 | 46% | 10% |
+| **Zeus-v1.2-MoveOrder-noQS** | -95 | **1435** | 50/52 | 96 | 37% | 22% |
+| Stockfish-1320 | -159 | **1342** | 54/58 | 96 | 28% | 10% |
+
+`real_elo = 1571.5 + 1.4405*raw_elo`. Anchors land properly monotonic
+with their nominal UCI_Elo order this run (1929 > 1628 > 1521 > 1342),
+unlike v1.1's inverted anchors — lower measurement noise this time.
+
+**Move ordering alone: ≈1435 Elo, +110 over v1's 1325.** A large,
+clean, easily-resolved gain (unlike quiescence's own +9) — expected,
+since MVV-LVA/killer ordering helps alpha-beta's cutoff rate directly in
+every search, not just at the leaf.
+
+### Stage B: move ordering + quiescence back ON
+
+Compares against Stage A above (+110 baseline) to re-isolate
+quiescence's own contribution, now that the CPW-recommended prerequisite
+(move ordering) is in place — directly testing v1.1's hypothesis that
+quiescence's measured gain was masked by inefficient unordered search.
+Full game log: `results/zeus_v1.2b_moveorder_qs_tournament.pgn` +
+`.moves.log` (committed, 240 games).
+
+| Participant | Raw (bayeselo) | Calibrated real Elo | +/- | Games | Score% | Draws% |
+|---|---|---|---|---|---|---|
+| Stockfish-1900 | 195 | **1837** | 64/58 | 96 | 76% | 2% |
+| Stockfish-1700 | 140 | **1767** | 59/55 | 96 | 70% | 6% |
+| **Zeus-v1.2-MoveOrder-QS** | -48 | **1529** | 51/51 | 96 | 45% | 25% |
+| Stockfish-1500 | -62 | **1511** | 53/54 | 96 | 41% | 9% |
+| Stockfish-1320 | -225 | **1304** | 57/63 | 96 | 18% | 14% |
+
+`real_elo = 1589.8 + 1.2685*raw_elo`. Anchors (excluding Zeus) again
+properly monotonic (1837 > 1767 > 1511 > 1304).
+
+**Move ordering + quiescence: ≈1529 Elo, +94 over Stage A's 1435 —
+quiescence's contribution is now clearly measurable**, in sharp contrast
+to the +9/noise result it got on its own in v1.1. This confirms v1.1's
+hypothesis directly: quiescence's horizon-effect fix is real (already
+shown qualitatively in v1.1 via the stable-vs-oscillating score
+evidence), and its Elo value was being suppressed by exploring captures
+in an arbitrary, unordered sequence — ordering them first (MVV-LVA) lets
+alpha-beta's cutoffs inside `quiesce` actually fire efficiently.
+
+### Summary: full chain from v1 to v1.2b
+
+| Stage | Elo | Delta | vs |
+|---|---|---|---|
+| v1 (ID + time management) | 1325 | — | — |
+| v1.1 (+ quiescence alone) | 1334 | +9 (noise) | v1 |
+| v1.2a (+ move ordering, QS off) | 1435 | +110 | v1 |
+| v1.2b (+ move ordering + QS) | 1529 | +94 | v1.2a |
+
+Net gain from this stage's two features combined: **+204 Elo** (1325 ->
+1529), split roughly 110/94 between move ordering and quiescence - but
+only once move ordering existed to make quiescence's search efficient.
+Takeaway for future staging: where two features interact (here,
+quiescence's efficiency depends on move ordering), measuring them in the
+"wrong" order can make a real feature look like noise, exactly as
+happened with quiescence in v1.1. Worth considering feature-interaction
+risk before assuming a future stage's roadmap order is itself
+interaction-free.
+
+Takeaways for the next roadmap stage (`ROADMAP.md`):
+- Transposition Table + Zobrist Hashing is next. It should also unlock a
+  real PV-move/hash-move for tier-1/2 of `Reference/search/Move_Ordering.md`'s
+  full ordering sequence (not yet implemented - Zeus is still missing the
+  "PV-move" and "hash move" tiers above captures), so measure with that
+  possibility in mind.
+- The `UseQuiescence` toggle stays in the codebase (cheap, harmless,
+  useful for any future ablation need) but defaults to `true` and is not
+  part of the standard calibration command going forward.
