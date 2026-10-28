@@ -25,6 +25,11 @@ struct EngineState {
     board: Board,
     stop: Option<Arc<AtomicBool>>,
     search_thread: Option<JoinHandle<()>>,
+    /// Ablation-study toggle for `zeus-bench` (see
+    /// `crates/zeus-engine/src/search.rs`'s module doc comment) - a custom
+    /// engine option in the same style as the "Nullmove"/"Selectivity"
+    /// examples in `Reference/protocols/UCI_Protocol.md`'s own spec.
+    use_quiescence: bool,
 }
 
 impl EngineState {
@@ -42,6 +47,7 @@ fn main() {
         board: Board::default(),
         stop: None,
         search_thread: None,
+        use_quiescence: true,
     };
 
     for line in stdin.lock().lines() {
@@ -58,9 +64,11 @@ fn main() {
             "uci" => {
                 println!("id name {ENGINE_NAME}");
                 println!("id author {ENGINE_AUTHOR}");
+                println!("option name UseQuiescence type check default true");
                 println!("uciok");
             }
             "isready" => println!("readyok"),
+            "setoption" => handle_setoption(&mut state, &tokens[1..]),
             "ucinewgame" => {
                 state.join_search();
                 state.board = Board::default();
@@ -125,6 +133,25 @@ fn handle_position(state: &mut EngineState, args: &[&str]) {
     state.board = board;
 }
 
+/// `setoption name <id> [value <x>]`, per
+/// `Reference/protocols/UCI_Protocol.md`. Only `UseQuiescence` is
+/// recognized; anything else is ignored, per that same spec ("if the
+/// engine or the GUI receives an unknown command or token it should just
+/// ignore it").
+fn handle_setoption(state: &mut EngineState, args: &[&str]) {
+    if args.first() != Some(&"name") {
+        return;
+    }
+    let Some(value_idx) = args.iter().position(|&t| t == "value") else {
+        return;
+    };
+    let name = args[1..value_idx].join(" ");
+    let value = args[value_idx + 1..].join(" ");
+    if name.eq_ignore_ascii_case("UseQuiescence") {
+        state.use_quiescence = value.eq_ignore_ascii_case("true");
+    }
+}
+
 fn handle_go(state: &mut EngineState, args: &[&str]) {
     let mut clock = GoClock::default();
     let mut explicit_depth: Option<u32> = None;
@@ -173,6 +200,7 @@ fn handle_go(state: &mut EngineState, args: &[&str]) {
     state.stop = Some(Arc::clone(&stop));
 
     let board = state.board;
+    let use_quiescence = state.use_quiescence;
     let search_start = now;
     state.search_thread = Some(std::thread::spawn(move || {
         let on_iteration = |info: &IterationInfo| {
@@ -185,7 +213,15 @@ fn handle_go(state: &mut EngineState, args: &[&str]) {
             let _ = io::stdout().flush();
         };
 
-        match search_iterative(&board, stop, hard_deadline, soft_deadline, max_depth, on_iteration) {
+        match search_iterative(
+            &board,
+            stop,
+            hard_deadline,
+            soft_deadline,
+            max_depth,
+            use_quiescence,
+            on_iteration,
+        ) {
             Some((mv, _score)) => println!("bestmove {mv}"),
             // No legal moves (checkmate/stalemate at the root) - the
             // spec's null move 0000, per Reference/protocols/UCI_Protocol.md.
