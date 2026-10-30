@@ -12,14 +12,18 @@ use chess::{Board, ChessMove};
 use std::io::{self, BufRead, Write};
 use std::str::FromStr;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 use std::time::Instant;
 use time::GoClock;
 use zeus_engine::search::{search_iterative, IterationInfo, MAX_DEPTH};
+use zeus_engine::tt::TranspositionTable;
 
 const ENGINE_NAME: &str = "Zeus";
 const ENGINE_AUTHOR: &str = "Zeus project (see ROADMAP.md / CITATIONS.md)";
+/// "the engine should use a very small hash first as default" -
+/// Reference/protocols/UCI_Protocol.md's Hash option description.
+const DEFAULT_HASH_MB: usize = 16;
 
 struct EngineState {
     board: Board,
@@ -30,6 +34,13 @@ struct EngineState {
     /// engine option in the same style as the "Nullmove"/"Selectivity"
     /// examples in `Reference/protocols/UCI_Protocol.md`'s own spec.
     use_quiescence: bool,
+    /// Persists across `go` calls within a game (cleared on `ucinewgame`),
+    /// per `Reference/search/Transposition_Table.md`. `Arc<Mutex<_>>`
+    /// because the search thread needs it too; only one search ever runs
+    /// at a time (`join_search` is called before starting another), so
+    /// the lock is taken once per `go` and held for that whole search,
+    /// not per-node.
+    tt: Arc<Mutex<TranspositionTable>>,
 }
 
 impl EngineState {
@@ -48,6 +59,7 @@ fn main() {
         stop: None,
         search_thread: None,
         use_quiescence: true,
+        tt: Arc::new(Mutex::new(TranspositionTable::new(DEFAULT_HASH_MB))),
     };
 
     for line in stdin.lock().lines() {
@@ -65,6 +77,9 @@ fn main() {
                 println!("id name {ENGINE_NAME}");
                 println!("id author {ENGINE_AUTHOR}");
                 println!("option name UseQuiescence type check default true");
+                println!(
+                    "option name Hash type spin default {DEFAULT_HASH_MB} min 1 max 4096"
+                );
                 println!("uciok");
             }
             "isready" => println!("readyok"),
@@ -72,6 +87,11 @@ fn main() {
             "ucinewgame" => {
                 state.join_search();
                 state.board = Board::default();
+                // New game: stale entries from a different game shouldn't
+                // be reused (Reference/search/Transposition_Table.md's
+                // "age" field is this project's substitute for proper
+                // aging - see that file).
+                state.tt.lock().unwrap().clear();
             }
             "position" => {
                 // By protocol a new "position" only arrives after the
@@ -149,6 +169,15 @@ fn handle_setoption(state: &mut EngineState, args: &[&str]) {
     let value = args[value_idx + 1..].join(" ");
     if name.eq_ignore_ascii_case("UseQuiescence") {
         state.use_quiescence = value.eq_ignore_ascii_case("true");
+    } else if name.eq_ignore_ascii_case("Hash") {
+        if let Ok(mb) = value.parse::<usize>() {
+            // Resizing mid-search would be unsound (the search thread
+            // holds the lock for its whole run, see EngineState::tt) -
+            // by protocol this only arrives between searches anyway, but
+            // join defensively first.
+            state.join_search();
+            *state.tt.lock().unwrap() = TranspositionTable::new(mb);
+        }
     }
 }
 
@@ -201,6 +230,7 @@ fn handle_go(state: &mut EngineState, args: &[&str]) {
 
     let board = state.board;
     let use_quiescence = state.use_quiescence;
+    let tt = Arc::clone(&state.tt);
     let search_start = now;
     state.search_thread = Some(std::thread::spawn(move || {
         let on_iteration = |info: &IterationInfo| {
@@ -213,6 +243,7 @@ fn handle_go(state: &mut EngineState, args: &[&str]) {
             let _ = io::stdout().flush();
         };
 
+        let mut tt_guard = tt.lock().unwrap();
         match search_iterative(
             &board,
             stop,
@@ -220,6 +251,7 @@ fn handle_go(state: &mut EngineState, args: &[&str]) {
             soft_deadline,
             max_depth,
             use_quiescence,
+            &mut tt_guard,
             on_iteration,
         ) {
             Some((mv, _score)) => println!("bestmove {mv}"),

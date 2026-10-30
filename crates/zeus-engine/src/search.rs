@@ -31,7 +31,16 @@
 //! quiescence held constant (off, matching the v1 baseline it's compared
 //! against), then measure quiescence's contribution again now that
 //! ordering exists, isolating each variable in turn.
+//! - `Reference/search/Zobrist_Hashing.md` / `Reference/search/Transposition_Table.md`
+//!   — `tt: &mut TranspositionTable` threaded through `search_iterative`,
+//!   `search_root_once`, and `alpha_beta` (not `quiesce` — see those files
+//!   for the scope boundary). Probed for cutoffs and for a "hash move"
+//!   ordering tier (above MVV-LVA captures, per
+//!   `Reference/search/Move_Ordering.md`'s tier 2), stored after every
+//!   `depth_left >= 1` node.
 use crate::eval::{evaluate, PIECE_VALUE};
+use crate::tt::{Bound, TranspositionTable, TtEntry};
+use crate::zobrist;
 use chess::{Board, BoardStatus, ChessMove, MoveGen, EMPTY};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
@@ -58,6 +67,12 @@ const TIME_CHECK_INTERVAL: u64 = 2048;
 /// still scores above 0).
 const CAPTURE_BASE: i32 = 1_000_000;
 const KILLER_SCORE: [i32; 2] = [2_000, 1_000];
+/// The transposition table's stored best move sorts above everything,
+/// per `Reference/search/Transposition_Table.md` ("best move [...] from
+/// the transposition table is the most important part of move
+/// ordering"). Margin above `CAPTURE_BASE` is Zeus's own choice, same as
+/// the other score-band constants above.
+const HASH_MOVE_SCORE: i32 = 2_000_000;
 
 /// `victim_value*16 - attacker_value`, per `Reference/search/MVV-LVA.md`
 /// (the `*16` multiplier is Zeus's own choice, documented there). `None`
@@ -121,14 +136,16 @@ impl SearchContext {
         }
     }
 
-    /// Legal moves ordered captures-first (MVV-LVA), then this ply's
-    /// killer moves, then everything else, per
-    /// `Reference/search/Move_Ordering.md`.
-    fn ordered_moves(&self, board: &Board, ply: usize) -> Vec<ChessMove> {
+    /// Legal moves ordered hash-move first (`Reference/search/Transposition_Table.md`),
+    /// then captures (MVV-LVA), then this ply's killer moves, then
+    /// everything else, per `Reference/search/Move_Ordering.md`.
+    fn ordered_moves(&self, board: &Board, ply: usize, tt_move: Option<ChessMove>) -> Vec<ChessMove> {
         let killers = self.killers.get(ply);
         let mut scored: Vec<(ChessMove, i32)> = MoveGen::new_legal(board)
             .map(|mv| {
-                let score = if let Some(cap) = capture_score(board, mv) {
+                let score = if Some(mv) == tt_move {
+                    HASH_MOVE_SCORE
+                } else if let Some(cap) = capture_score(board, mv) {
                     CAPTURE_BASE + cap
                 } else if killers.is_some_and(|k| k[0] == Some(mv)) {
                     KILLER_SCORE[0]
@@ -165,6 +182,7 @@ fn alpha_beta(
     depth_left: u32,
     ply: u32,
     ctx: &mut SearchContext,
+    tt: &mut TranspositionTable,
 ) -> i32 {
     ctx.visit_node();
     if ctx.stop.load(Ordering::Relaxed) {
@@ -174,6 +192,8 @@ fn alpha_beta(
         return score;
     }
     if depth_left == 0 {
+        // Quiescence boundary: out of the transposition table's scope
+        // this stage, see Reference/search/Transposition_Table.md.
         return if ctx.use_quiescence {
             quiesce(board, alpha, beta, ctx)
         } else {
@@ -181,15 +201,32 @@ fn alpha_beta(
         };
     }
 
+    let original_alpha = alpha;
+    let hash = zobrist::hash(board);
+    let tt_entry = tt.probe(hash);
+    if let Some(entry) = tt_entry {
+        if entry.depth >= depth_left {
+            match entry.bound {
+                Bound::Exact => return entry.score,
+                Bound::Lower if entry.score >= beta => return entry.score,
+                Bound::Upper if entry.score <= alpha => return entry.score,
+                _ => {}
+            }
+        }
+    }
+    let tt_move = tt_entry.and_then(|e| e.best_move);
+
     let mut best_value = -MATE_VALUE - 1;
-    for mv in ctx.ordered_moves(board, ply as usize) {
+    let mut best_move: Option<ChessMove> = None;
+    for mv in ctx.ordered_moves(board, ply as usize, tt_move) {
         let child = board.make_move_new(mv);
-        let score = -alpha_beta(&child, -beta, -alpha, depth_left - 1, ply + 1, ctx);
+        let score = -alpha_beta(&child, -beta, -alpha, depth_left - 1, ply + 1, ctx, tt);
         if ctx.stop.load(Ordering::Relaxed) {
             return best_value; // discarded by the caller
         }
         if score > best_value {
             best_value = score;
+            best_move = Some(mv);
             if score > alpha {
                 alpha = score;
             }
@@ -201,9 +238,29 @@ fn alpha_beta(
             if board.piece_on(mv.get_dest()).is_none() {
                 ctx.store_killer(ply as usize, mv);
             }
+            tt.store(TtEntry {
+                key: hash,
+                depth: depth_left,
+                score: best_value,
+                bound: Bound::Lower,
+                best_move,
+            });
             return best_value;
         }
     }
+
+    let bound = if best_value > original_alpha {
+        Bound::Exact
+    } else {
+        Bound::Upper
+    };
+    tt.store(TtEntry {
+        key: hash,
+        depth: depth_left,
+        score: best_value,
+        bound,
+        best_move,
+    });
     best_value
 }
 
@@ -279,12 +336,20 @@ fn quiesce(board: &Board, mut alpha: i32, beta: i32, ctx: &mut SearchContext) ->
 /// fallback note, a move whose sub-search was interrupted is never
 /// recorded (its score is unreliable), but moves evaluated earlier in this
 /// same pass are kept.
-fn search_root_once(board: &Board, depth: u32, ctx: &mut SearchContext) -> Option<(ChessMove, i32)> {
+fn search_root_once(
+    board: &Board,
+    depth: u32,
+    ctx: &mut SearchContext,
+    tt: &mut TranspositionTable,
+) -> Option<(ChessMove, i32)> {
     let mut best: Option<(ChessMove, i32)> = None;
     let mut alpha = -MATE_VALUE - 1;
     let beta = MATE_VALUE + 1;
 
-    for mv in ctx.ordered_moves(board, 0) {
+    let hash = zobrist::hash(board);
+    let tt_move = tt.probe(hash).and_then(|e| e.best_move);
+
+    for mv in ctx.ordered_moves(board, 0, tt_move) {
         // Once there is at least one evaluated move to fall back on,
         // respect an abort before starting the next. The very first move
         // is always evaluated regardless of `stop` (even if that means
@@ -298,7 +363,7 @@ fn search_root_once(board: &Board, depth: u32, ctx: &mut SearchContext) -> Optio
             break;
         }
         let child = board.make_move_new(mv);
-        let score = -alpha_beta(&child, -beta, -alpha, depth.saturating_sub(1), 1, ctx);
+        let score = -alpha_beta(&child, -beta, -alpha, depth.saturating_sub(1), 1, ctx, tt);
         let aborted_mid_move = ctx.stop.load(Ordering::Relaxed);
         if best.is_none() || (!aborted_mid_move && score > best.unwrap().1) {
             best = Some((mv, score));
@@ -308,6 +373,23 @@ fn search_root_once(board: &Board, depth: u32, ctx: &mut SearchContext) -> Optio
         }
         if score > alpha {
             alpha = score;
+        }
+    }
+
+    // The root's beta is +infinity, so a cutoff (Bound::Lower) can never
+    // occur here - every fully-evaluated move gets its true negamax
+    // value, so a complete (non-aborted) pass is Bound::Exact. An aborted
+    // pass is not stored, same "don't cache an unreliable result"
+    // principle as the rest of this module.
+    if !ctx.stop.load(Ordering::Relaxed) {
+        if let Some((mv, score)) = best {
+            tt.store(TtEntry {
+                key: hash,
+                depth,
+                score,
+                bound: Bound::Exact,
+                best_move: Some(mv),
+            });
         }
     }
     best
@@ -334,6 +416,7 @@ pub fn search_iterative(
     soft_deadline: Option<Instant>,
     max_depth: u32,
     use_quiescence: bool,
+    tt: &mut TranspositionTable,
     mut on_iteration: impl FnMut(&IterationInfo),
 ) -> Option<(ChessMove, i32)> {
     let mut overall_best: Option<(ChessMove, i32)> = None;
@@ -341,7 +424,7 @@ pub fn search_iterative(
 
     for depth in 1..=max_depth {
         let mut ctx = SearchContext::new(Arc::clone(&stop), hard_deadline, use_quiescence);
-        let result = search_root_once(board, depth, &mut ctx);
+        let result = search_root_once(board, depth, &mut ctx, tt);
         total_nodes += ctx.nodes.load(Ordering::Relaxed);
         let aborted = stop.load(Ordering::Relaxed);
 
