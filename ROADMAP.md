@@ -54,23 +54,32 @@ logged.
       by unordered captures. Net from both features together: **+204**
       over v1. Full detail (including the temporary `UseQuiescence`
       ablation toggle) in `ELO_LOG.md`.
+- [x] v1.3 **Transposition Table** with **Zobrist Hashing**
+      (`Reference/search/Transposition_Table.md`,
+      `Reference/search/Zobrist_Hashing.md`), including the hash-move
+      ordering tier above MVV-LVA captures. Measured (round-robin, 240
+      games, same methodology as v1.2, no rebaseline needed): **~1729
+      Elo, +200** over v1.2b's 1529 — the largest single-stage jump so
+      far; Zeus now out-rates one of its own Stockfish anchors
+      (Stockfish-1700) for the first time. One time loss observed (0.4%
+      of games, a long queen-endgame scramble) — noted, not yet
+      investigated, worth re-checking if the rate climbs. Full detail in
+      `ELO_LOG.md`.
 
 ## Planned, in order
 
-1. **Transposition Table** with **Zobrist Hashing** — needs
-   `Reference/search/Transposition_Table.md`, `Reference/search/Zobrist_Hashing.md`.
-   Also expected to unlock a real hash-move for move ordering's top tier
-   (not yet implemented - see `ELO_LOG.md`'s v1.2 takeaways).
-2. **Piece-Square Tables** added to evaluation (isolate their Elo contribution
+1. **Piece-Square Tables** added to evaluation (isolate their Elo contribution
    from the search-side gains above) — needs
-   `Reference/evaluation/Piece-Square_Tables.md`.
-3. **Aspiration Windows** around the previous iteration's score.
-4. **Null Move Pruning**.
-5. **Principal Variation Search** (replace plain alpha-beta).
-6. **Late Move Reductions**.
-7. **King Safety / Mobility / Pawn Structure** evaluation terms.
-8. (stretch) **NNUE** evaluation — large scope increase (training data,
-   network format); only attempted after 1–7 are measured and logged, and
+   `Reference/evaluation/Piece-Square_Tables.md`. First evaluation-side
+   change since v0.1's material-only baseline; expected to matter more
+   now that search-side "basic techniques" have mostly landed.
+2. **Aspiration Windows** around the previous iteration's score.
+3. **Null Move Pruning**.
+4. **Principal Variation Search** (replace plain alpha-beta).
+5. **Late Move Reductions**.
+6. **King Safety / Mobility / Pawn Structure** evaluation terms.
+7. (stretch) **NNUE** evaluation — large scope increase (training data,
+   network format); only attempted after 1–6 are measured and logged, and
    only with its own dedicated Reference fetch + citation set.
 
 Each numbered stage gets its own commit(s) and its own `ELO_LOG.md` entry

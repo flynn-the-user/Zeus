@@ -400,3 +400,59 @@ Takeaways for the next roadmap stage (`ROADMAP.md`):
 - The `UseQuiescence` toggle stays in the codebase (cheap, harmless,
   useful for any future ablation need) but defaults to `true` and is not
   part of the standard calibration command going forward.
+
+## v1.3 — transposition table + Zobrist hashing
+
+Commit: `3547ad9` ("Add transposition table with Zobrist hashing").
+Engine change from v1.2b: `alpha_beta` probes/stores a transposition
+table (`Reference/search/Transposition_Table.md`) keyed by a Zobrist hash
+(`Reference/search/Zobrist_Hashing.md`), both for alpha-beta cutoffs and
+a new hash-move ordering tier above MVV-LVA captures. Persists across
+`go` calls within a game via a `Hash` UCI option (default 16MB).
+Methodology unchanged (240 games, 24/pair, opening suite, 1-minute
+bullet, same roster) — clean single-variable comparison against v1.2b's
+1529 Elo, no rebaseline needed. Full game log:
+`results/zeus_v1.3_tt_tournament.pgn` + `.moves.log` (committed, 240
+games).
+
+| Participant | Raw (bayeselo) | Calibrated real Elo | +/- | Games | Score% | Draws% |
+|---|---|---|---|---|---|---|
+| Stockfish-1900 | 192 | **1875** | 63/57 | 96 | 76% | 4% |
+| **Zeus-v1.3-TT** | 78 | **1729** | 56/55 | 96 | 60% | 4% |
+| Stockfish-1700 | 62 | **1709** | 56/55 | 96 | 58% | 6% |
+| Stockfish-1500 | -68 | **1543** | 54/56 | 96 | 40% | 4% |
+| Stockfish-1320 | -263 | **1293** | 63/74 | 96 | 16% | 2% |
+
+`real_elo = 1629.6 + 1.2797*raw_elo`. Anchors (excluding Zeus) properly
+monotonic (1875 > 1709 > 1543 > 1293).
+
+**Zeus v1.3 ≈ 1729 Elo, up +200 over v1.2b's 1529.** The largest single
+jump so far, and for the first time Zeus out-rates one of the Stockfish
+anchors it's anchored against (1729 vs Stockfish-1700's 1709) rather
+than just an easier anchor than itself. Qualitatively confirmed too: at
+the same `go movetime 800` test position used for earlier stages, node
+counts dropped roughly 3x at matched depths and the engine reached depth
+9 in less time than it previously took to reach depth 8 — consistent
+with TT cutoffs actually firing, not just the hash-move ordering tier
+helping a little.
+
+**One honest caveat:** one game (round 65, 70-ish range, Stockfish-1700
+vs Zeus, English Opening, 195 plies) ended in a **time loss for Zeus** —
+0.4% of the 240 games, the first `Timeout` result observed since v0.1.
+It was a long, sharp king-and-queen endgame with repeated promotions
+late in the game (a classic "many forced-looking moves burn clock fast
+under 0 increment" scenario). Not investigated further this stage (one
+occurrence isn't enough signal to diagnose, and the soft/hard bound
+formulas in `crates/zeus-uci/src/time.rs` are otherwise unchanged from
+v1 where zero timeouts were observed over 240+1000 games) — noted here
+so it isn't quietly forgotten; worth re-checking if the rate increases
+in a future stage's measurement.
+
+Takeaways for the next roadmap stage (`ROADMAP.md`):
+- Piece-Square Tables are next (first evaluation-side change since
+  v0.1's material-only baseline) — expect a real, substantial Elo gain
+  given search-side improvements have now mostly run their course for
+  the "basic" techniques and the evaluation function still can't tell a
+  knight on a rim square from one in the center.
+- Keep an eye on the timeout rate in future measurements given the one
+  observed here.
