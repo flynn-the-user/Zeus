@@ -76,17 +76,35 @@ logged.
       same "long maneuvering game" profile as v1.3's) — two data points
       now, still not chased down but flagged as a pattern worth a
       dedicated look if a third occurs. Full detail in `ELO_LOG.md`.
+- [x] v1.5 **Aspiration Windows** (`Reference/search/Aspiration_Windows.md`)
+      around the previous iteration's score. Measured (round-robin, 240
+      games, same methodology as v1.4): calibrated **~2030 Elo**
+      (nominally -79 vs v1.4's 2109), but **not read as a regression** —
+      head-to-head score against 3 of 4 shared anchors was equal or
+      *higher* than v1.4's. The calibrated number moved because Zeus is
+      now winning 92-98% against the three weaker anchors, starving
+      bayeselo's joint fit of variance to calibrate against (a
+      **roster-saturation problem**, not a feature regression). Action:
+      widen the Stockfish roster (add a 2100+ anchor) starting with the
+      next stage rather than re-measuring this one. Third occurrence of
+      the long-game-timeout pattern observed — now flagged as needing a
+      real look, not just another note. Full detail in `ELO_LOG.md`.
 
 ## Planned, in order
 
-1. **Aspiration Windows** around the previous iteration's score.
-2. **Null Move Pruning**.
-3. **Principal Variation Search** (replace plain alpha-beta).
-4. **Late Move Reductions**.
-5. **King Safety / Mobility / Pawn Structure** evaluation terms.
-6. (stretch) **NNUE** evaluation — large scope increase (training data,
-   network format); only attempted after 1–5 are measured and logged, and
+1. **Null Move Pruning**.
+2. **Principal Variation Search** (replace plain alpha-beta).
+3. **Late Move Reductions**.
+4. **King Safety / Mobility / Pawn Structure** evaluation terms.
+5. (stretch) **NNUE** evaluation — large scope increase (training data,
+   network format); only attempted after 1–4 are measured and logged, and
    only with its own dedicated Reference fetch + citation set.
+
+**Before the next calibration run**: widen `zeus-bench`'s default
+Stockfish roster (currently 1320/1500/1700/1900) to include a stronger
+anchor (e.g. 2100), per v1.5's roster-saturation finding in
+`ELO_LOG.md` — Zeus is now strong enough that the top of the current
+range no longer gives bayeselo enough variance to calibrate precisely.
 
 Each numbered stage gets its own commit(s) and its own `ELO_LOG.md` entry
 showing before/after Elo with confidence interval, per

@@ -516,3 +516,72 @@ Takeaways for the next roadmap stage (`ROADMAP.md`):
   features in this roadmap's ordering — but staying with the existing
   planned order for now rather than re-prioritizing off one data point.
 - The timeout pattern above is worth a dedicated look if it recurs.
+
+## v1.5 — aspiration windows
+
+Commit: `5e85235` ("Add aspiration windows"). Engine change from v1.4:
+`search_root_once` (depth >= 2) searches a narrow window around the
+previous iteration's score (`Reference/search/Aspiration_Windows.md`)
+instead of the full range, re-searching with the failing side widened on
+a miss. Methodology unchanged (240 games, 24/pair, opening suite,
+1-minute bullet, same roster) — nominally a clean comparison against
+v1.4's 2109, but read the roster-saturation caveat below before taking
+the headline number at face value. Full game log:
+`results/zeus_v1.5_aspw_tournament.pgn` + `.moves.log` (committed, 240
+games).
+
+| Participant | Raw (bayeselo) | Calibrated real Elo | +/- | Games | Score% | Draws% |
+|---|---|---|---|---|---|---|
+| **Zeus-v1.5-AspW** | 319 | **2030** | 76/65 | 96 | 89% | 8% |
+| Stockfish-1900 | 88 | **1784** | 60/59 | 96 | 59% | 6% |
+| Stockfish-1700 | 54 | **1748** | 59/59 | 96 | 56% | 5% |
+| Stockfish-1500 | -76 | **1609** | 59/61 | 96 | 40% | 4% |
+| Stockfish-1320 | -386 | **1279** | 77/99 | 96 | 7% | 3% |
+
+`real_elo = 1690.3 + 1.0661*raw_elo`.
+
+**Headline number: -79 vs v1.4 (2030 vs 2109). Not read as a
+regression** — here's why. v1.5's head-to-head scores against the same
+four anchors were *equal or higher* than v1.4's in 3 of 4 cases:
+
+| Opponent | v1.4 score% | v1.5 score% |
+|---|---|---|
+| Stockfish-1320 | 91.7% | **97.9%** |
+| Stockfish-1500 | 85.4% | **93.8%** |
+| Stockfish-1700 | 85.4% | **91.7%** |
+| Stockfish-1900 | 70.8% | 70.8% (tied) |
+
+Zeus is now winning 92-98% of games against the three weaker anchors,
+which leaves very little variance in those pairings for bayeselo's
+joint fit to anchor the scale with — the fitted slope this run (1.0661)
+is much shallower than v1.4's (1.5497), compressing the whole scale and
+pulling Zeus's calibrated number down despite stronger raw performance.
+This is a **roster-saturation problem**, not evidence aspiration
+windows hurt: our 1320-1900 anchor spread is no longer wide enough to
+precisely calibrate an engine this strong, and every future stage will
+face the same growing problem.
+
+**Action taken**: not re-measuring v1.4/v1.5 retroactively (the
+head-to-head comparison above is already informative enough, and
+redoing both under a wider roster would cost another several hours for
+a result unlikely to overturn "no clear change, plausibly slightly
+positive"). **Action for the future**: the roster should gain a
+higher anchor (e.g. 2100+) starting with the next stage's measurement,
+so later stages don't run into this same calibration ceiling as Zeus
+keeps improving.
+
+Another long-game timeout observed (two games both hit exactly 175
+plies this run; moves.log doesn't record which specific one timed out,
+only the live progress log did) — third occurrence of the same pattern
+flagged since v1.3. Still not investigated in depth, but three data
+points now makes this worth a dedicated look soon rather than continuing
+to defer it.
+
+Takeaways for the next roadmap stage (`ROADMAP.md`):
+- **Widen the Stockfish roster** (add a 2100 anchor at minimum) before
+  the next calibration run — this is now the higher-priority
+  methodology fix, ahead of chasing the aspiration-window number
+  further.
+- Null Move Pruning is next (search-side).
+- The timeout pattern (3 occurrences now, all long maneuvering games)
+  deserves a real look soon, not just another passive note.
