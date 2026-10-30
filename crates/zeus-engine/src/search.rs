@@ -38,6 +38,11 @@
 //!   ordering tier (above MVV-LVA captures, per
 //!   `Reference/search/Move_Ordering.md`'s tier 2), stored after every
 //!   `depth_left >= 1` node.
+//! - `Reference/search/Aspiration_Windows.md` — `search_root_once` now
+//!   searches depth >= 2 with a narrow window around the previous
+//!   iteration's score instead of the full `(-inf, +inf)` range,
+//!   re-searching with only the failing side widened (exponentially) on
+//!   a fail-low/fail-high, per that page.
 use crate::eval::{evaluate, PIECE_VALUE};
 use crate::tt::{Bound, TranspositionTable, TtEntry};
 use crate::zobrist;
@@ -73,6 +78,15 @@ const KILLER_SCORE: [i32; 2] = [2_000, 1_000];
 /// ordering"). Margin above `CAPTURE_BASE` is Zeus's own choice, same as
 /// the other score-band constants above.
 const HASH_MOVE_SCORE: i32 = 2_000_000;
+
+/// Initial half-window: "1/2 to 1/4 of a pawn on either side of the
+/// guess" — Zeus uses the 1/4-pawn end. Widen factor: the page's own
+/// worked example (1/4 pawn -> 1 pawn on a fail-high) is exactly 4x.
+/// Retry cap: Zeus's own termination guarantee, not from the page (which
+/// gives no guidance on when to give up and use the full window).
+const ASPIRATION_INITIAL_WINDOW: i32 = 25;
+const ASPIRATION_WIDEN_FACTOR: i32 = 4;
+const ASPIRATION_MAX_RETRIES: u32 = 5;
 
 /// `victim_value*16 - attacker_value`, per `Reference/search/MVV-LVA.md`
 /// (the `*16` multiplier is Zeus's own choice, documented there). `None`
@@ -330,21 +344,25 @@ fn quiesce(board: &Board, mut alpha: i32, beta: i32, ctx: &mut SearchContext) ->
     best_value
 }
 
-/// One complete (or aborted) root pass at a fixed depth. Returns the best
-/// (move, score) among whichever root moves were fully evaluated before an
-/// abort — per `Reference/search/Iterative_Deepening.md`'s depth-1
-/// fallback note, a move whose sub-search was interrupted is never
-/// recorded (its score is unreliable), but moves evaluated earlier in this
-/// same pass are kept.
-fn search_root_once(
+/// One complete (or aborted) root pass at a fixed depth and window.
+/// Returns the best (move, score) among whichever root moves were fully
+/// evaluated before an abort — per
+/// `Reference/search/Iterative_Deepening.md`'s depth-1 fallback note, a
+/// move whose sub-search was interrupted is never recorded (its score is
+/// unreliable), but moves evaluated earlier in this same pass are kept.
+/// The returned score may be a bound rather than the true value (a
+/// fail-low/fail-high against `alpha`/`beta`) — `search_root_once` below
+/// is what interprets that and decides whether to trust or re-search it.
+fn search_root_pass(
     board: &Board,
     depth: u32,
+    alpha_init: i32,
+    beta: i32,
     ctx: &mut SearchContext,
     tt: &mut TranspositionTable,
 ) -> Option<(ChessMove, i32)> {
     let mut best: Option<(ChessMove, i32)> = None;
-    let mut alpha = -MATE_VALUE - 1;
-    let beta = MATE_VALUE + 1;
+    let mut alpha = alpha_init;
 
     let hash = zobrist::hash(board);
     let tt_move = tt.probe(hash).and_then(|e| e.best_move);
@@ -374,25 +392,93 @@ fn search_root_once(
         if score > alpha {
             alpha = score;
         }
+        if score >= beta {
+            // Aspiration windows (Reference/search/Aspiration_Windows.md)
+            // mean the root's beta is no longer always +infinity, so -
+            // unlike before that stage - a root fail-high is now possible
+            // and further sibling moves can't change that verdict.
+            break;
+        }
     }
 
-    // The root's beta is +infinity, so a cutoff (Bound::Lower) can never
-    // occur here - every fully-evaluated move gets its true negamax
-    // value, so a complete (non-aborted) pass is Bound::Exact. An aborted
-    // pass is not stored, same "don't cache an unreliable result"
-    // principle as the rest of this module.
+    // An aborted pass is not stored, same "don't cache an unreliable
+    // result" principle as the rest of this module. Otherwise classify
+    // against the window actually used, per
+    // Reference/search/Transposition_Table.md's standard rules.
     if !ctx.stop.load(Ordering::Relaxed) {
         if let Some((mv, score)) = best {
+            let bound = if score <= alpha_init {
+                Bound::Upper
+            } else if score >= beta {
+                Bound::Lower
+            } else {
+                Bound::Exact
+            };
             tt.store(TtEntry {
                 key: hash,
                 depth,
                 score,
-                bound: Bound::Exact,
+                bound,
                 best_move: Some(mv),
             });
         }
     }
     best
+}
+
+/// Aspiration-window wrapper (`Reference/search/Aspiration_Windows.md`)
+/// around `search_root_pass`: depth 1 (no previous score to center on)
+/// and any depth whose re-searches exhaust `ASPIRATION_MAX_RETRIES` use
+/// the full window; otherwise starts at `aspiration_guess` +/-
+/// `ASPIRATION_INITIAL_WINDOW` and, on a fail, widens *only* the failing
+/// side by `ASPIRATION_WIDEN_FACTOR` each retry, holding the other side
+/// fixed at its original margin from the guess, exactly as that page
+/// describes.
+fn search_root_once(
+    board: &Board,
+    depth: u32,
+    aspiration_guess: Option<i32>,
+    ctx: &mut SearchContext,
+    tt: &mut TranspositionTable,
+) -> Option<(ChessMove, i32)> {
+    let full_alpha = -MATE_VALUE - 1;
+    let full_beta = MATE_VALUE + 1;
+
+    let Some(guess) = aspiration_guess.filter(|_| depth > 1) else {
+        return search_root_pass(board, depth, full_alpha, full_beta, ctx, tt);
+    };
+
+    let mut alpha_margin = ASPIRATION_INITIAL_WINDOW;
+    let mut beta_margin = ASPIRATION_INITIAL_WINDOW;
+
+    for attempt in 0..=ASPIRATION_MAX_RETRIES {
+        let full_window = attempt == ASPIRATION_MAX_RETRIES;
+        let (alpha, beta) = if full_window {
+            (full_alpha, full_beta)
+        } else {
+            (
+                (guess - alpha_margin).max(full_alpha),
+                (guess + beta_margin).min(full_beta),
+            )
+        };
+
+        let result = search_root_pass(board, depth, alpha, beta, ctx, tt);
+        if ctx.stop.load(Ordering::Relaxed) || full_window {
+            return result; // can't fail against an infinite window either way
+        }
+        let Some((_, score)) = result else {
+            return result;
+        };
+
+        if score <= alpha {
+            alpha_margin *= ASPIRATION_WIDEN_FACTOR;
+        } else if score >= beta {
+            beta_margin *= ASPIRATION_WIDEN_FACTOR;
+        } else {
+            return result;
+        }
+    }
+    unreachable!("the attempt == ASPIRATION_MAX_RETRIES case always returns")
 }
 
 pub struct IterationInfo {
@@ -421,16 +507,18 @@ pub fn search_iterative(
 ) -> Option<(ChessMove, i32)> {
     let mut overall_best: Option<(ChessMove, i32)> = None;
     let mut total_nodes = 0u64;
+    let mut previous_score: Option<i32> = None;
 
     for depth in 1..=max_depth {
         let mut ctx = SearchContext::new(Arc::clone(&stop), hard_deadline, use_quiescence);
-        let result = search_root_once(board, depth, &mut ctx, tt);
+        let result = search_root_once(board, depth, previous_score, &mut ctx, tt);
         total_nodes += ctx.nodes.load(Ordering::Relaxed);
         let aborted = stop.load(Ordering::Relaxed);
 
         match result {
             Some((mv, score)) if !aborted => {
                 overall_best = Some((mv, score));
+                previous_score = Some(score);
                 on_iteration(&IterationInfo {
                     depth,
                     score,
