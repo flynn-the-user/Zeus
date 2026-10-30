@@ -456,3 +456,63 @@ Takeaways for the next roadmap stage (`ROADMAP.md`):
   knight on a rim square from one in the center.
 - Keep an eye on the timeout rate in future measurements given the one
   observed here.
+
+## v1.4 — piece-square tables
+
+Commit: `77d7802` ("Add piece-square tables to evaluation"). Engine
+change from v1.3: evaluation is no longer material-only — adds all 7 PST
+tables (`Reference/evaluation/Simplified_Evaluation_Function.md`'s exact
+values) per piece, with a binary middlegame/endgame king-table switch
+(`Reference/evaluation/Piece-Square_Tables.md`). Methodology unchanged
+(240 games, 24/pair, opening suite, 1-minute bullet, same roster) —
+clean single-variable comparison against v1.3's 1729 Elo. Full game log:
+`results/zeus_v1.4_pst_tournament.pgn` + `.moves.log` (committed, 240
+games).
+
+| Participant | Raw (bayeselo) | Calibrated real Elo | +/- | Games | Score% | Draws% |
+|---|---|---|---|---|---|---|
+| **Zeus-v1.4-PST** | 260 | **2109** | 71/62 | 96 | 83% | 4% |
+| Stockfish-1900 | 92 | **1849** | 58/56 | 96 | 63% | 4% |
+| Stockfish-1700 | -10 | **1691** | 55/55 | 96 | 48% | 7% |
+| Stockfish-1500 | -67 | **1602** | 55/56 | 96 | 41% | 8% |
+| Stockfish-1320 | -276 | **1278** | 64/74 | 96 | 15% | 3% |
+
+`real_elo = 1706.1 + 1.5497*raw_elo`. Anchors (excluding Zeus) properly
+monotonic (1849 > 1691 > 1602 > 1278).
+
+**Zeus v1.4 ≈ 2109 Elo, up +380 over v1.3's 1729 — the largest jump of
+any stage so far**, and Zeus now decisively out-rates every single
+Stockfish anchor in the roster (83% score vs the floor, 70.8% even
+against Stockfish-1900) rather than just one. Large, but not
+implausible: `Reference/evaluation/Piece-Square_Tables.md` quotes the
+source material itself calling material + PST "enough for a program to
+play a semi-decent game of chess" — a material-only evaluator has
+*zero* defense against systematic positional blunders (undeveloped
+pieces, a king wandering to a bad square, no sense of center control)
+regardless of how deep or efficient its search is, so fixing that
+across the board is a bigger lever than any single search technique
+measured so far. Spot-verified by hand before this run (see the v1.4
+commit message): `go depth 1` from the startpos scores `Nf3` at exactly
++50cp, matching the table lookup by hand.
+
+**Second honest timeout note:** another time loss (round 10, Zeus as
+Black vs Stockfish-1320, Sicilian Kan, 153 plies) — 1/240 again (0.4%),
+same profile as v1.3's (a long, maneuvering middlegame/endgame grind).
+Two timeouts now across 480 total games at this stage's methodology
+(v1.3 + v1.4), both in long games with heavy non-forcing shuffling.
+Still not investigated in depth, but the pattern (long games, not short
+ones) is consistent enough across both occurrences that it's worth
+flagging explicitly as a hypothesis: Zeus's hard time bound
+(`crates/zeus-uci/src/time.rs`: `min(soft*4, time_left/2)`) may not
+account well for *cumulative* drift over very long games with many
+near-hard-bound moves in a row, as opposed to any single move
+overrunning badly. Worth a dedicated look if a future stage's
+measurement shows a third occurrence or a climbing rate.
+
+Takeaways for the next roadmap stage (`ROADMAP.md`):
+- Aspiration windows are next (search-side again). Given PST's outsized
+  gain, it may be worth sanity-checking that evaluation-side low-hanging
+  fruit isn't being systematically underweighted relative to search-side
+  features in this roadmap's ordering — but staying with the existing
+  planned order for now rather than re-prioritizing off one data point.
+- The timeout pattern above is worth a dedicated look if it recurs.

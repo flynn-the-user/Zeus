@@ -65,21 +65,27 @@ logged.
       of games, a long queen-endgame scramble) — noted, not yet
       investigated, worth re-checking if the rate climbs. Full detail in
       `ELO_LOG.md`.
+- [x] v1.4 **Piece-Square Tables** added to evaluation
+      (`Reference/evaluation/Piece-Square_Tables.md`, exact values from
+      `Reference/evaluation/Simplified_Evaluation_Function.md`), binary
+      middlegame/endgame king-table switch. Measured (round-robin, 240
+      games, same methodology as v1.3, no rebaseline needed): **~2109
+      Elo, +380** over v1.3's 1729 — the largest single-stage jump so
+      far, and Zeus now out-rates *every* Stockfish anchor in the
+      roster, not just one. A second time loss observed (0.4% again,
+      same "long maneuvering game" profile as v1.3's) — two data points
+      now, still not chased down but flagged as a pattern worth a
+      dedicated look if a third occurs. Full detail in `ELO_LOG.md`.
 
 ## Planned, in order
 
-1. **Piece-Square Tables** added to evaluation (isolate their Elo contribution
-   from the search-side gains above) — needs
-   `Reference/evaluation/Piece-Square_Tables.md`. First evaluation-side
-   change since v0.1's material-only baseline; expected to matter more
-   now that search-side "basic techniques" have mostly landed.
-2. **Aspiration Windows** around the previous iteration's score.
-3. **Null Move Pruning**.
-4. **Principal Variation Search** (replace plain alpha-beta).
-5. **Late Move Reductions**.
-6. **King Safety / Mobility / Pawn Structure** evaluation terms.
-7. (stretch) **NNUE** evaluation — large scope increase (training data,
-   network format); only attempted after 1–6 are measured and logged, and
+1. **Aspiration Windows** around the previous iteration's score.
+2. **Null Move Pruning**.
+3. **Principal Variation Search** (replace plain alpha-beta).
+4. **Late Move Reductions**.
+5. **King Safety / Mobility / Pawn Structure** evaluation terms.
+6. (stretch) **NNUE** evaluation — large scope increase (training data,
+   network format); only attempted after 1–5 are measured and logged, and
    only with its own dedicated Reference fetch + citation set.
 
 Each numbered stage gets its own commit(s) and its own `ELO_LOG.md` entry
