@@ -8,7 +8,7 @@
 //! with readyok without stopping the search."
 mod time;
 
-use chess::{Board, ChessMove};
+use chess::{Board, ChessMove, MoveGen};
 use std::io::{self, BufRead, Write};
 use std::str::FromStr;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -46,7 +46,14 @@ struct EngineState {
 impl EngineState {
     fn join_search(&mut self) {
         if let Some(handle) = self.search_thread.take() {
-            let _ = handle.join();
+            // The search thread now catches its own panics internally
+            // (see `handle_go`) and always sends a `bestmove` regardless,
+            // so this `join()` should never itself return `Err` anymore -
+            // but if it somehow does (a panic outside that catch_unwind),
+            // log it instead of silently discarding it like before.
+            if handle.join().is_err() {
+                eprintln!("zeus-uci: search thread panicked outside its own catch_unwind");
+            }
         }
         self.stop = None;
     }
@@ -145,8 +152,19 @@ fn handle_position(state: &mut EngineState, args: &[&str]) {
     if args.get(idx) == Some(&"moves") {
         for mv_str in &args[idx + 1..] {
             match ChessMove::from_str(mv_str) {
-                Ok(mv) => board = board.make_move_new(mv),
-                Err(_) => break,
+                // Checked against the board, not just parsed: an
+                // unchecked `make_move_new` on an illegal move silently
+                // produces an internally-inconsistent Board (e.g. a
+                // "legal" move from MoveGen on it can then have an empty
+                // source square), which previously reached a panic deep
+                // in search (`capture_score`'s "move source always has a
+                // piece") - and a panicking search thread's result was
+                // silently discarded by `join_search`, so the engine
+                // would never send `bestmove` at all. Found via a direct
+                // replay-based investigation of the UCI_Elo evaluation's
+                // mysterious long-game timeout losses.
+                Ok(mv) if board.legal(mv) => board = board.make_move_new(mv),
+                _ => break,
             }
         }
     }
@@ -244,20 +262,46 @@ fn handle_go(state: &mut EngineState, args: &[&str]) {
         };
 
         let mut tt_guard = tt.lock().unwrap();
-        match search_iterative(
-            &board,
-            stop,
-            hard_deadline,
-            soft_deadline,
-            max_depth,
-            use_quiescence,
-            &mut tt_guard,
-            on_iteration,
-        ) {
-            Some((mv, _score)) => println!("bestmove {mv}"),
+        // Never let an internal panic leave the GUI waiting forever: a
+        // panicking thread's result used to be silently discarded by
+        // `join_search` (`let _ = handle.join();`), meaning the engine
+        // would simply never send `bestmove` - which looks exactly like
+        // a time loss to any arbiter/GUI waiting on the clock, and was
+        // traced back as the real cause of a string of mysterious
+        // long-game "Timeout" results in zeus-bench's Elo evaluation.
+        // catch_unwind is memory-safe regardless of what state the
+        // search left `tt_guard`/`board` in (a torn transposition-table
+        // entry is just a harmless cache miss later, not a soundness
+        // issue), so AssertUnwindSafe is appropriate here.
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            search_iterative(
+                &board,
+                stop,
+                hard_deadline,
+                soft_deadline,
+                max_depth,
+                use_quiescence,
+                &mut tt_guard,
+                on_iteration,
+            )
+        }));
+        match result {
+            Ok(Some((mv, _score))) => println!("bestmove {mv}"),
             // No legal moves (checkmate/stalemate at the root) - the
             // spec's null move 0000, per Reference/protocols/UCI_Protocol.md.
-            None => println!("bestmove 0000"),
+            Ok(None) => println!("bestmove 0000"),
+            Err(panic_payload) => {
+                let msg = panic_payload
+                    .downcast_ref::<&str>()
+                    .map(|s| s.to_string())
+                    .or_else(|| panic_payload.downcast_ref::<String>().cloned())
+                    .unwrap_or_else(|| "<non-string panic payload>".to_string());
+                eprintln!("zeus-uci: search panicked ({msg}), falling back to first legal move");
+                match MoveGen::new_legal(&board).next() {
+                    Some(mv) => println!("bestmove {mv}"),
+                    None => println!("bestmove 0000"),
+                }
+            }
         }
         let _ = io::stdout().flush();
     }));
