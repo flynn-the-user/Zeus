@@ -102,19 +102,36 @@ logged.
       roster is the new default until Zeus outgrows it too, at which
       point repeat the fix (shift anchors up again). Full detail in
       `ELO_LOG.md`.
+- [x] v1.6 **Null Move Pruning** (`Reference/search/Null_Move_Pruning.md`),
+      R=3, guarded against check/shallow-depth/zugzwang/chaining.
+      Measured (round-robin, 144 games, same 2000+ roster as v1.5, no
+      saturation): **~2291 Elo**, -43 vs v1.5's 2334 — **not
+      statistically meaningful at this sample size**, same read as
+      v1.1's +9. Node-count/depth efficiency gains confirmed
+      qualitatively regardless (same fixed test position: ~2.7x fewer
+      nodes at matched depth, one ply deeper in the same time). Flagged
+      for revisit once Principal Variation Search (next stage) lands,
+      mirroring the quiescence/move-ordering interaction pattern. Fourth
+      timeout occurrence (4/4 in long games) — flagged as needing a real
+      look rather than another deferral. Full detail in `ELO_LOG.md`.
 
 ## Planned, in order
 
-1. **Null Move Pruning**.
-2. **Principal Variation Search** (replace plain alpha-beta).
-3. **Late Move Reductions**.
-4. **King Safety / Mobility / Pawn Structure** evaluation terms.
-5. (stretch) **NNUE** evaluation — large scope increase (training data,
-   network format); only attempted after 1–4 are measured and logged, and
+1. **Principal Variation Search** (replace plain alpha-beta) — also the
+   point to revisit null move pruning's contribution, per v1.6's note.
+2. **Late Move Reductions**.
+3. **King Safety / Mobility / Pawn Structure** evaluation terms.
+4. (stretch) **NNUE** evaluation — large scope increase (training data,
+   network format); only attempted after 1–3 are measured and logged, and
    only with its own dedicated Reference fetch + citation set.
 
-Next stage's measurement (null move pruning) will be a clean delta
-against this entry's **~2334 Elo**, same roster.
+**Before or alongside the next calibration run**: investigate the
+long-game timeout pattern (4 occurrences now, 100% in long maneuvering
+games) directly — per `ELO_LOG.md`'s v1.6 takeaway, this has been
+deferred three times already.
+
+Next stage's measurement (PVS) will be a clean delta against this
+entry's **~2291 Elo**, same roster.
 
 Each numbered stage gets its own commit(s) and its own `ELO_LOG.md` entry
 showing before/after Elo with confidence interval, per

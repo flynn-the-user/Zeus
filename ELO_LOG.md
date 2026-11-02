@@ -638,3 +638,64 @@ Going forward: this 3-anchor (2000/2300/2600) roster is the new
 default for every future stage's measurement until Zeus outgrows it
 too, at which point repeat this same fix (shift the anchors up again)
 rather than accumulate anchors indefinitely.
+
+## v1.6 — null move pruning
+
+Commit: `85f1e29` ("Add null move pruning"). Engine change from v1.5:
+`alpha_beta` tries a reduced-depth null-window search after passing the
+move before generating any real moves
+(`Reference/search/Null_Move_Pruning.md`), R=3, guarded against check,
+depth < 4, zugzwang-prone (pawn-only) positions, and chained null
+moves. Methodology identical to v1.5's 2000+-roster entry (144 games, 6
+pairs, same TC/opening-suite) — clean comparison, no saturation this
+time either (anchors land properly monotonic again). Full game log:
+`results/zeus_v1.6_nmp_tournament.pgn` + `.moves.log` (committed, 144
+games).
+
+| Participant | Raw (bayeselo) | Calibrated real Elo | +/- | Games | Score% | Draws% |
+|---|---|---|---|---|---|---|
+| Stockfish-2600 | 170 | **2609** | 66/59 | 72 | 77% | 7% |
+| **Zeus-v1.6-NMP** | -4 | **2291** | 57/57 | 72 | 50% | 6% |
+| Stockfish-2300 | -10 | **2280** | 56/57 | 72 | 48% | 7% |
+| Stockfish-2000 | -157 | **2011** | 58/64 | 72 | 25% | 8% |
+
+`real_elo = 2298.2 + 1.8287*raw_elo`. Anchors properly monotonic
+(2609 > 2280 > 2011).
+
+**Zeus v1.6 ≈ 2291 Elo, vs v1.5's 2334: -43 Elo — not a statistically
+meaningful change at this sample size.** The 95% CIs on the individual
+pairwise deltas (e.g. +/-150-300 Elo wide) comfortably contain zero
+movement; -43 reads as noise, the same conclusion v1.1's +9 reached, not
+a sign the feature hurts. The qualitative evidence for the feature
+working correctly stands independent of this measurement: node counts
+at matched depths dropped further on the same fixed test position used
+for every prior stage (~2.7x at depth 8 vs pre-NMP), and the engine
+reached one ply deeper in the same time budget. A pawn-only-material
+test position correctly triggered the zugzwang guard and returned a
+sane move rather than a pruning-induced blunder.
+
+Plausible (unproven) reasons a clean positive signal didn't show up
+here, parallel to the quiescence/move-ordering interaction found
+earlier: null move pruning's main value is usually realized together
+with **Principal Variation Search** (a later roadmap stage) and deeper
+search generally helps less without evaluation refinements (king
+safety, mobility) to make the extra depth count for something beyond
+material/PST — both still missing. Not re-measuring now; flagged for
+the same "revisit once the prerequisite lands" treatment as v1.1.
+
+**Fourth timeout observed** (183 plies this run) — same long-game
+profile as the three prior occurrences (v1.3, v1.4, v1.5). Four data
+points across four different engine versions now, all in long
+maneuvering/endgame-heavy games, none in short tactical ones. This
+pattern has been deferred three times already; it should be looked at
+directly before deferring a fourth time.
+
+Takeaways for the next roadmap stage (`ROADMAP.md`):
+- Principal Variation Search is next — also the natural point to
+  revisit whether null move pruning's contribution becomes clearer
+  once PVS is in place, mirroring the quiescence/move-ordering pattern.
+- The timeout pattern (now 4 occurrences, 100% in long games) should get
+  a real look: read a sample of the affected games'
+  `crates/uci/src/time.rs` clock accounting, or add instrumentation to
+  `zeus-bench`/`zeus-uci` logging actual time used per move vs budgeted,
+  rather than continuing to note it passively.
