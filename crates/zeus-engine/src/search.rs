@@ -273,36 +273,65 @@ fn alpha_beta(
         }
     }
 
+    // Principal Variation Search (Reference/search/Principal_Variation_Search.md):
+    // first move gets the full window, every later move gets a cheap
+    // null-window search that only proves "not better than alpha" - a
+    // full re-search only happens if that's surprisingly untrue.
     let mut best_value = -MATE_VALUE - 1;
     let mut best_move: Option<ChessMove> = None;
-    for mv in ctx.ordered_moves(board, ply as usize, tt_move) {
+    let mut moves = ctx.ordered_moves(board, ply as usize, tt_move).into_iter();
+
+    let store_cutoff_and_return = |ctx: &mut SearchContext, tt: &mut TranspositionTable, mv: ChessMove, value: i32| -> i32 {
+        if board.piece_on(mv.get_dest()).is_none() {
+            ctx.store_killer(ply as usize, mv);
+        }
+        tt.store(TtEntry {
+            key: hash,
+            depth: depth_left,
+            score: value,
+            bound: Bound::Lower,
+            best_move: Some(mv),
+        });
+        value
+    };
+
+    if let Some(mv) = moves.next() {
         let child = board.make_move_new(mv);
         let score = -alpha_beta(&child, -beta, -alpha, depth_left - 1, ply + 1, ctx, tt, true);
         if ctx.stop.load(Ordering::Relaxed) {
             return best_value; // discarded by the caller
         }
-        if score > best_value {
-            best_value = score;
-            best_move = Some(mv);
-            if score > alpha {
-                alpha = score;
-            }
+        best_value = score;
+        best_move = Some(mv);
+        if score > alpha {
+            alpha = score;
         }
         if score >= beta {
-            // Killer Heuristic (Reference/search/Killer_Heuristic.md):
-            // only non-capture cutoffs are remembered - captures are
-            // already well-ordered by MVV-LVA.
-            if board.piece_on(mv.get_dest()).is_none() {
-                ctx.store_killer(ply as usize, mv);
+            return store_cutoff_and_return(ctx, tt, mv, best_value);
+        }
+
+        for mv in moves {
+            let child = board.make_move_new(mv);
+            let mut score = -alpha_beta(&child, -alpha - 1, -alpha, depth_left - 1, ply + 1, ctx, tt, true);
+            if ctx.stop.load(Ordering::Relaxed) {
+                return best_value;
             }
-            tt.store(TtEntry {
-                key: hash,
-                depth: depth_left,
-                score: best_value,
-                bound: Bound::Lower,
-                best_move,
-            });
-            return best_value;
+            if score > alpha && score < beta {
+                score = -alpha_beta(&child, -beta, -alpha, depth_left - 1, ply + 1, ctx, tt, true);
+                if ctx.stop.load(Ordering::Relaxed) {
+                    return best_value;
+                }
+                if score > alpha {
+                    alpha = score;
+                }
+            }
+            if score > best_value {
+                best_value = score;
+                best_move = Some(mv);
+            }
+            if score >= beta {
+                return store_cutoff_and_return(ctx, tt, mv, best_value);
+            }
         }
     }
 
@@ -410,37 +439,58 @@ fn search_root_pass(
     let hash = zobrist::hash(board);
     let tt_move = tt.probe(hash).and_then(|e| e.best_move);
 
-    for mv in ctx.ordered_moves(board, 0, tt_move) {
-        // Once there is at least one evaluated move to fall back on,
-        // respect an abort before starting the next. The very first move
-        // is always evaluated regardless of `stop` (even if that means
-        // its own sub-search gets cut short and its score is unreliable),
-        // so the root can never end up with zero candidate moves even if
-        // `stop` is set before a single move finishes - the
-        // Iterative_Deepening.md fallback note is for falling back
-        // between *iterations*, this is the same idea one level lower, for
-        // falling back between *moves* within the first iteration.
-        if best.is_some() && ctx.stop.load(Ordering::Relaxed) {
-            break;
-        }
+    // Principal Variation Search (Reference/search/Principal_Variation_Search.md),
+    // same pattern as alpha_beta: first move full window, later moves a
+    // null-window probe with a full re-search only if that's surprising.
+    let mut moves = ctx.ordered_moves(board, 0, tt_move).into_iter();
+
+    // The very first move is always evaluated regardless of `stop` (even
+    // if that means its own sub-search gets cut short and its score is
+    // unreliable), so the root can never end up with zero candidate
+    // moves even if `stop` is set before a single move finishes - the
+    // Iterative_Deepening.md fallback note is for falling back between
+    // *iterations*, this is the same idea one level lower, for falling
+    // back between *moves* within the first iteration.
+    if let Some(mv) = moves.next() {
         let child = board.make_move_new(mv);
         let score = -alpha_beta(&child, -beta, -alpha, depth.saturating_sub(1), 1, ctx, tt, true);
-        let aborted_mid_move = ctx.stop.load(Ordering::Relaxed);
-        if best.is_none() || (!aborted_mid_move && score > best.unwrap().1) {
-            best = Some((mv, score));
-        }
-        if aborted_mid_move {
-            break;
-        }
-        if score > alpha {
-            alpha = score;
-        }
-        if score >= beta {
-            // Aspiration windows (Reference/search/Aspiration_Windows.md)
-            // mean the root's beta is no longer always +infinity, so -
-            // unlike before that stage - a root fail-high is now possible
-            // and further sibling moves can't change that verdict.
-            break;
+        best = Some((mv, score));
+        if !ctx.stop.load(Ordering::Relaxed) {
+            if score > alpha {
+                alpha = score;
+            }
+            if score < beta {
+                for mv in moves {
+                    if ctx.stop.load(Ordering::Relaxed) {
+                        break;
+                    }
+                    let child = board.make_move_new(mv);
+                    let mut score =
+                        -alpha_beta(&child, -alpha - 1, -alpha, depth.saturating_sub(1), 1, ctx, tt, true);
+                    if ctx.stop.load(Ordering::Relaxed) {
+                        break;
+                    }
+                    if score > alpha && score < beta {
+                        score = -alpha_beta(&child, -beta, -alpha, depth.saturating_sub(1), 1, ctx, tt, true);
+                        if ctx.stop.load(Ordering::Relaxed) {
+                            break;
+                        }
+                        if score > alpha {
+                            alpha = score;
+                        }
+                    }
+                    if score > best.unwrap().1 {
+                        best = Some((mv, score));
+                    }
+                    if score >= beta {
+                        // Aspiration windows (Reference/search/Aspiration_Windows.md)
+                        // mean the root's beta is no longer always
+                        // +infinity, so a root fail-high is possible and
+                        // further sibling moves can't change that verdict.
+                        break;
+                    }
+                }
+            }
         }
     }
 
