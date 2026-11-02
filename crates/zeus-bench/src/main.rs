@@ -59,12 +59,13 @@ fn parse_args() -> Args {
     let mut engine_cmd = default_engine_path();
     let mut engine_label = "Zeus-v0.1".to_string();
     let mut opponent_cmd = "stockfish".to_string();
-    // Two anchor categories (see ELO_LOG.md's v1.5 roster-saturation
-    // finding): the original sub-2000 spread, plus a higher category
-    // (2000/2300/2600) added once Zeus itself crossed ~2000 Elo and the
-    // low anchors stopped giving bayeselo's joint fit enough variance to
-    // calibrate the top of the scale precisely.
-    let mut roster_elo = vec![1320i64, 1500, 1700, 1900, 2000, 2300, 2600];
+    // Above-2000 anchor category (see ELO_LOG.md's v1.5 roster-saturation
+    // finding): once Zeus itself crossed ~2000 Elo, the original
+    // 1320/1500/1700/1900 spread stopped giving bayeselo's joint fit
+    // enough variance to calibrate the top of the scale precisely (Zeus
+    // was winning 92-98% against all of them). Per the user's explicit
+    // choice, this replaces that roster rather than extending it.
+    let mut roster_elo = vec![2000i64, 2300, 2600];
     let mut games_per_pair = 100u32;
     let mut concurrency = (std::thread::available_parallelism()
         .map(|n| n.get())

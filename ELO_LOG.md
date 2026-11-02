@@ -28,16 +28,18 @@
   The simple single-pair logistic formula in `crates/zeus-bench/src/elo.rs`
   is still printed per-pair as a quick sanity cross-check, but bayeselo's
   joint fit is the number of record.
-- Roster: `1320,1500,1700,1900,2000,2300,2600` (7 anchors, 21 pairs) as
-  of v1.5's re-measurement below — this is now `zeus-bench`'s own
-  default (`crates/zeus-bench/src/main.rs`), so `--roster` doesn't need
-  to be passed explicitly going forward unless overriding it. The
-  2000/2300/2600 anchors were added once Zeus itself crossed ~2000 Elo
-  and the original 1320-1900 spread stopped giving bayeselo's joint fit
-  enough variance to calibrate the top of the scale precisely (the v1.5
-  entry below explains the finding that prompted this). Entries before
-  the "v1.5 (wide roster)" one below used the original 4-anchor roster
-  only — noted per entry, not retroactively re-measured.
+- Roster: `2000,2300,2600` (3 anchors + Zeus = 4 participants, 6 pairs) as of v1.5's
+  re-measurement below — this is now `zeus-bench`'s own default
+  (`crates/zeus-bench/src/main.rs`), **replacing** the original
+  1320/1500/1700/1900 spread per the user's explicit choice, so
+  `--roster` doesn't need to be passed explicitly going forward unless
+  overriding it. The switch happened once Zeus itself crossed ~2000 Elo
+  and the old anchors stopped giving bayeselo's joint fit enough
+  variance to calibrate the scale precisely — Zeus was winning 92-98%
+  against all of them (the v1.5 entry below explains the finding that
+  prompted this). Entries before the "v1.5 (2000+ roster)" one below
+  used the original 4-anchor roster — noted per entry, not retroactively
+  re-measured.
 - Command: `zeus-bench --games-per-pair 100 --concurrency 5 --base-ms
   60000 --inc-ms 0` (roster now defaulted, see above), run on a 10-core
   Apple Silicon Mac. `tools/bayeselo` built via `scripts/setup_bayeselo.sh`.
