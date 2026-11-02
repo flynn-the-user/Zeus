@@ -43,6 +43,10 @@
 //!   iteration's score instead of the full `(-inf, +inf)` range,
 //!   re-searching with only the failing side widened (exponentially) on
 //!   a fail-low/fail-high, per that page.
+//! - `Reference/search/Null_Move_Pruning.md` — `alpha_beta` tries a
+//!   reduced-depth null-window search after passing the move (`Board::null_move`)
+//!   before generating any real moves, per that page's pseudocode. The new
+//!   `allow_null` parameter prevents chaining two null moves in a row.
 use crate::eval::{evaluate, PIECE_VALUE};
 use crate::tt::{Bound, TranspositionTable, TtEntry};
 use crate::zobrist;
@@ -88,6 +92,12 @@ const ASPIRATION_INITIAL_WINDOW: i32 = 25;
 const ASPIRATION_WIDEN_FACTOR: i32 = 4;
 const ASPIRATION_MAX_RETRIES: u32 = 5;
 
+/// "Generally skip if depth < 4" and "a basic implementation of NMP uses
+/// a fixed reduction of 3 or 4" (Zeus picks the lower end, R=3) — both
+/// from `Reference/search/Null_Move_Pruning.md`.
+const NULL_MOVE_MIN_DEPTH: u32 = 4;
+const NULL_MOVE_REDUCTION: u32 = 3;
+
 /// `victim_value*16 - attacker_value`, per `Reference/search/MVV-LVA.md`
 /// (the `*16` multiplier is Zeus's own choice, documented there). `None`
 /// for non-captures, including en passant (also documented there as a
@@ -100,6 +110,17 @@ fn capture_score(board: &Board, mv: ChessMove) -> Option<i32> {
             .expect("move source always has a piece");
         PIECE_VALUE[victim.to_index()] * 16 - PIECE_VALUE[attacker.to_index()]
     })
+}
+
+/// Zeus's concrete reading of `Reference/search/Null_Move_Pruning.md`'s
+/// "pawn-only endgames" null-move guard: does the side to move have any
+/// piece besides pawns and king? If not, skip null move pruning (that's
+/// exactly the zugzwang-prone case the null move observation breaks
+/// down in).
+fn has_non_pawn_material(board: &Board, color: chess::Color) -> bool {
+    let own = *board.color_combined(color);
+    let pawns_and_king = *board.pieces(chess::Piece::Pawn) | *board.pieces(chess::Piece::King);
+    (own & !pawns_and_king).popcnt() > 0
 }
 
 /// Shared state for one `go` search: lets the UCI layer abort a search
@@ -189,6 +210,7 @@ fn terminal_score(board: &Board) -> Option<i32> {
 /// polls the hard deadline and lets an externally-set `stop` flag (from a
 /// UCI `stop` command) cut the search short within `TIME_CHECK_INTERVAL`
 /// nodes.
+#[allow(clippy::too_many_arguments)]
 fn alpha_beta(
     board: &Board,
     mut alpha: i32,
@@ -197,6 +219,7 @@ fn alpha_beta(
     ply: u32,
     ctx: &mut SearchContext,
     tt: &mut TranspositionTable,
+    allow_null: bool,
 ) -> i32 {
     ctx.visit_node();
     if ctx.stop.load(Ordering::Relaxed) {
@@ -230,11 +253,31 @@ fn alpha_beta(
     }
     let tt_move = tt_entry.and_then(|e| e.best_move);
 
+    // Null Move Pruning (Reference/search/Null_Move_Pruning.md): pass the
+    // move, search reduced-depth with a null window; if even a free
+    // tempo for the opponent still fails high, prune without generating
+    // any real moves.
+    if allow_null
+        && depth_left >= NULL_MOVE_MIN_DEPTH
+        && has_non_pawn_material(board, board.side_to_move())
+    {
+        if let Some(null_board) = board.null_move() {
+            let reduced_depth = depth_left.saturating_sub(NULL_MOVE_REDUCTION);
+            let v = -alpha_beta(&null_board, -beta, -beta + 1, reduced_depth, ply + 1, ctx, tt, false);
+            if ctx.stop.load(Ordering::Relaxed) {
+                return 0; // discarded by the caller
+            }
+            if v >= beta {
+                return v;
+            }
+        }
+    }
+
     let mut best_value = -MATE_VALUE - 1;
     let mut best_move: Option<ChessMove> = None;
     for mv in ctx.ordered_moves(board, ply as usize, tt_move) {
         let child = board.make_move_new(mv);
-        let score = -alpha_beta(&child, -beta, -alpha, depth_left - 1, ply + 1, ctx, tt);
+        let score = -alpha_beta(&child, -beta, -alpha, depth_left - 1, ply + 1, ctx, tt, true);
         if ctx.stop.load(Ordering::Relaxed) {
             return best_value; // discarded by the caller
         }
@@ -381,7 +424,7 @@ fn search_root_pass(
             break;
         }
         let child = board.make_move_new(mv);
-        let score = -alpha_beta(&child, -beta, -alpha, depth.saturating_sub(1), 1, ctx, tt);
+        let score = -alpha_beta(&child, -beta, -alpha, depth.saturating_sub(1), 1, ctx, tt, true);
         let aborted_mid_move = ctx.stop.load(Ordering::Relaxed);
         if best.is_none() || (!aborted_mid_move && score > best.unwrap().1) {
             best = Some((mv, score));
