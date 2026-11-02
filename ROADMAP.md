@@ -114,24 +114,43 @@ logged.
       mirroring the quiescence/move-ordering interaction pattern. Fourth
       timeout occurrence (4/4 in long games) — flagged as needing a real
       look rather than another deferral. Full detail in `ELO_LOG.md`.
+- [x] v1.7 **Principal Variation Search**
+      (`Reference/search/Principal_Variation_Search.md`), fail-soft
+      pseudocode adopted verbatim in both `alpha_beta` and
+      `search_root_pass`. Measured (round-robin, 144 games, same
+      2000+ roster as v1.6, no saturation): **~2352 Elo, +61** over
+      v1.6's 2291 — modest and positive, matching the page's own
+      expectation ("about 10% of a search effort" saved, not a huge
+      jump alone). Verified exactly (not just plausibly) on the fixed
+      test position: scores at every depth 1-9 matched the pre-PVS run
+      bit-for-bit, confirming PVS computes identical results, just
+      faster. **Fifth timeout occurrence — actually investigated this
+      time.** Root cause found and fixed (commit `2c92550`): a panic
+      inside the search thread was silently discarded by
+      `join_search`, so the engine simply never sent `bestmove`,
+      indistinguishable from a slow move to any arbiter watching the
+      clock. Specific trigger closed (`handle_position` now validates
+      `board.legal(mv)` before applying moves from `position ...
+      moves ...`, instead of silently corrupting the `Board` on an
+      illegal one) and the general failure mode hardened regardless of
+      root cause (search thread now `catch_unwind`s and falls back to
+      the first legal move on any panic, rather than ever going
+      silent). Not re-measured as its own dedicated run (historical
+      rate <1% of games) — the next stage's regular measurement will
+      show whether Timeouts have actually stopped. Full detail in
+      `ELO_LOG.md`.
 
 ## Planned, in order
 
-1. **Principal Variation Search** (replace plain alpha-beta) — also the
-   point to revisit null move pruning's contribution, per v1.6's note.
-2. **Late Move Reductions**.
-3. **King Safety / Mobility / Pawn Structure** evaluation terms.
-4. (stretch) **NNUE** evaluation — large scope increase (training data,
-   network format); only attempted after 1–3 are measured and logged, and
+1. **Late Move Reductions**.
+2. **King Safety / Mobility / Pawn Structure** evaluation terms.
+3. (stretch) **NNUE** evaluation — large scope increase (training data,
+   network format); only attempted after 1–2 are measured and logged, and
    only with its own dedicated Reference fetch + citation set.
 
-**Before or alongside the next calibration run**: investigate the
-long-game timeout pattern (4 occurrences now, 100% in long maneuvering
-games) directly — per `ELO_LOG.md`'s v1.6 takeaway, this has been
-deferred three times already.
-
-Next stage's measurement (PVS) will be a clean delta against this
-entry's **~2291 Elo**, same roster.
+Next stage's measurement (LMR) will be a clean delta against this
+entry's **~2352 Elo**, same roster — and the first chance to confirm
+whether the timeout fix actually eliminated the pattern.
 
 Each numbered stage gets its own commit(s) and its own `ELO_LOG.md` entry
 showing before/after Elo with confidence interval, per

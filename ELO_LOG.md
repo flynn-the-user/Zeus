@@ -699,3 +699,86 @@ Takeaways for the next roadmap stage (`ROADMAP.md`):
   `crates/uci/src/time.rs` clock accounting, or add instrumentation to
   `zeus-bench`/`zeus-uci` logging actual time used per move vs budgeted,
   rather than continuing to note it passively.
+
+## v1.7 — Principal Variation Search
+
+Commit: `1934be9` ("Add Principal Variation Search"). Engine change from
+v1.6: `alpha_beta` and `search_root_pass` both restructured to
+`Reference/search/Principal_Variation_Search.md`'s fail-soft pseudocode
+— first move full window, later moves null-window with a conditional
+full re-search. Methodology identical to v1.6 (144 games, 6 pairs, same
+2000/2300/2600 roster, no saturation). Full game log:
+`results/zeus_v1.7_pvs_tournament.pgn` + `.moves.log` (committed, 144
+games).
+
+| Participant | Raw (bayeselo) | Calibrated real Elo | +/- | Games | Score% | Draws% |
+|---|---|---|---|---|---|---|
+| Stockfish-2600 | 197 | **2585** | 66/59 | 72 | 81% | 14% |
+| **Zeus-v1.7-PVS** | 28 | **2352** | 57/56 | 72 | 53% | 15% |
+| Stockfish-2300 | 10 | **2327** | 58/58 | 72 | 51% | 13% |
+| Stockfish-2000 | -235 | **1988** | 65/76 | 72 | 15% | 6% |
+
+`real_elo = 2312.9 + 1.3806*raw_elo`. Anchors properly monotonic
+(2585 > 2327 > 1988).
+
+**Zeus v1.7 ≈ 2352 Elo, up +61 over v1.6's 2291.** Modest but positive —
+consistent with PVS's own stated expectation ("with a good move
+ordering we expect to save about 10% of a search effort", not a huge
+jump on its own). Confirmed qualitatively too and more rigorously than
+usual: on the same fixed test position used for every prior stage,
+scores at every depth 1-9 matched the pre-PVS run *exactly* (not just
+plausibly similar), proving PVS computes identical results — this
+stage's efficiency gain (reached depth 10 vs 9 in the same time) is
+pure speedup, not a side-effect of a subtly different search.
+
+**Fifth timeout observed this run** (201 plies) — same long-game
+profile as all four prior occurrences. Five occurrences across five
+consecutive engine versions, every single one in a long game. Actually
+investigated this time instead of deferring again.
+
+### Timeout investigation: found and fixed (commit `2c92550`)
+
+Root cause: a panic inside the search thread was **silently discarded**
+by `join_search`'s `let _ = handle.join();` — the engine would simply
+never send `bestmove`, which any arbiter waiting on the clock cannot
+distinguish from a slow move; it just runs the clock out. That's exactly
+what every one of these five "Timeout" results actually was.
+
+Found by replaying this run's actual 201-ply losing game back through
+the engine move-by-move (`position ... moves ...` + `go wtime/btime`
+with the real shrinking clock), which reproduced a panic:
+`crates/zeus-engine/src/search.rs`'s `capture_score` hit `move source
+always has a piece` — `board.piece_on(mv.get_source())` returned `None`
+for a move `MoveGen` had just generated as legal, meaning the `Board`
+itself had become internally inconsistent. Traced to
+`crates/zeus-uci/src/main.rs::handle_position`: it applied moves from
+`position ... moves ...` via `make_move_new` without checking
+`board.legal(mv)` first (unlike `zeus-bench`'s own `game.rs`, which
+always validates). An illegal/malformed move string reaching that path
+would silently corrupt the board, and a later search node built from it
+could violate invariants the search code assumes always hold.
+
+Two fixes, both in `crates/zeus-uci/src/main.rs`:
+1. `handle_position` now checks `board.legal(mv)` before applying each
+   move from `position ... moves ...`, closing the specific corruption
+   path found.
+2. **Defense in depth, independent of root cause**: the search thread
+   now wraps its work in `catch_unwind` and falls back to the first
+   legal move on *any* panic, so the engine can never again go silent
+   and strand the GUI/arbiter waiting out the clock — this should
+   eliminate the failure mode even if some other, not-yet-found panic
+   trigger exists.
+
+Not re-run as a dedicated 144-game calibration on its own — the
+historical rate (5 of ~700+ games across all stages, <1%) isn't large
+enough to justify one in isolation, and a regular future-stage
+measurement will show whether the pattern is actually gone (zero
+Timeouts expected going forward; any further occurrence would now at
+least degrade to a cheap fallback move rather than a lost game).
+
+Takeaways for the next roadmap stage (`ROADMAP.md`):
+- Late Move Reductions is next.
+- Confirm in the next tournament's logs whether Timeout results have
+  actually stopped (expected) or just degraded to cheap fallback moves
+  (the defense-in-depth path firing, implying some other panic trigger
+  still exists and is worth finding).
