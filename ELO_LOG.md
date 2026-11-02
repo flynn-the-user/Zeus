@@ -590,10 +590,51 @@ points now makes this worth a dedicated look soon rather than continuing
 to defer it.
 
 Takeaways for the next roadmap stage (`ROADMAP.md`):
-- **Widen the Stockfish roster** (add a 2100 anchor at minimum) before
-  the next calibration run — this is now the higher-priority
-  methodology fix, ahead of chasing the aspiration-window number
-  further.
+- **Widen the Stockfish roster** before the next calibration run — see
+  the entry immediately below, which does exactly this.
 - Null Move Pruning is next (search-side).
 - The timeout pattern (3 occurrences now, all long maneuvering games)
   deserves a real look soon, not just another passive note.
+
+## v1.5 (2000+ roster) — resolving the saturation ambiguity
+
+Per the user's explicit request: the default Stockfish roster is now
+`2000,2300,2600` (3 anchors above Zeus's current strength range),
+**replacing** the original `1320,1500,1700,1900` rather than extending
+it (`crates/zeus-bench/src/main.rs`). Same engine as the v1.5 entry
+above (aspiration windows, no code change) — this is not a new
+engine-feature measurement, it's a re-measurement of the same binary
+under a roster that doesn't saturate. 6 pairs x 24 games = 144 games,
+same TC/opening-suite/concurrency as every other entry. Full game log:
+`results/zeus_v1.5_highroster_tournament.pgn` + `.moves.log` (committed,
+144 games).
+
+| Participant | Raw (bayeselo) | Calibrated real Elo | +/- | Games | Score% | Draws% |
+|---|---|---|---|---|---|---|
+| Stockfish-2600 | 190 | **2612** | 65/58 | 72 | 82% | 17% |
+| **Zeus-v1.5-AspW-HighRoster** | 16 | **2334** | 57/57 | 72 | 51% | 11% |
+| Stockfish-2300 | -23 | **2272** | 57/58 | 72 | 46% | 8% |
+| Stockfish-2000 | -183 | **2016** | 60/68 | 72 | 21% | 8% |
+
+`real_elo = 2308.5 + 1.5978*raw_elo`. Anchors properly monotonic
+(2612 > 2272 > 2016) and close to their nominal UCI_Elo targets — no
+saturation this time (score% against every anchor is in a healthy
+21-82% range, nothing near a shutout), exactly what the roster change
+was meant to fix.
+
+**Zeus v1.5 ≈ 2334 Elo** — a well-calibrated absolute number, not
+directly comparable as a "delta" to the earlier low-roster entries
+(the roster changed entirely, so it's not a matched-methodology
+comparison). What it resolves: the earlier ~2030/2109 figures were
+compressed by saturation against anchors Zeus had already outgrown;
+2334 is a materially higher, better-supported estimate of where Zeus
+actually stands right now. Scores are sensible and monotonic (51%
+vs Stockfish-2300, 73% vs Stockfish-2000-equivalent-strength, 23% vs
+Stockfish-2600) — a believable profile for an engine with TT +
+PST + move ordering + aspiration windows but still only material/PST
+evaluation and no null-move pruning, LMR, or king-safety terms yet.
+
+Going forward: this 3-anchor (2000/2300/2600) roster is the new
+default for every future stage's measurement until Zeus outgrows it
+too, at which point repeat this same fix (shift the anchors up again)
+rather than accumulate anchors indefinitely.

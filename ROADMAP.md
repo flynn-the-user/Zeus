@@ -89,6 +89,19 @@ logged.
       next stage rather than re-measuring this one. Third occurrence of
       the long-game-timeout pattern observed — now flagged as needing a
       real look, not just another note. Full detail in `ELO_LOG.md`.
+- [x] **Roster fix**: `zeus-bench`'s default Stockfish roster is now
+      `2000,2300,2600`, replacing `1320,1500,1700,1900` (per the user's
+      explicit choice — not an extension, a replacement). Re-measured
+      the same v1.5 binary under it (144 games, 6 pairs): **~2334 Elo**,
+      a well-calibrated absolute figure with properly monotonic anchors
+      and no saturation (score% against every anchor in a healthy
+      21-82% range) — not a "delta", since the roster changed entirely,
+      but resolves the earlier ambiguity: the ~2030/2109 low-roster
+      numbers were compressed by saturation, and 2334 is a materially
+      better-supported estimate of where Zeus actually stands. This
+      roster is the new default until Zeus outgrows it too, at which
+      point repeat the fix (shift anchors up again). Full detail in
+      `ELO_LOG.md`.
 
 ## Planned, in order
 
@@ -100,11 +113,8 @@ logged.
    network format); only attempted after 1–4 are measured and logged, and
    only with its own dedicated Reference fetch + citation set.
 
-**Before the next calibration run**: widen `zeus-bench`'s default
-Stockfish roster (currently 1320/1500/1700/1900) to include a stronger
-anchor (e.g. 2100), per v1.5's roster-saturation finding in
-`ELO_LOG.md` — Zeus is now strong enough that the top of the current
-range no longer gives bayeselo enough variance to calibrate precisely.
+Next stage's measurement (null move pruning) will be a clean delta
+against this entry's **~2334 Elo**, same roster.
 
 Each numbered stage gets its own commit(s) and its own `ELO_LOG.md` entry
 showing before/after Elo with confidence interval, per
