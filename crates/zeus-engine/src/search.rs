@@ -47,6 +47,16 @@
 //!   reduced-depth null-window search after passing the move (`Board::null_move`)
 //!   before generating any real moves, per that page's pseudocode. The new
 //!   `allow_null` parameter prevents chaining two null moves in a row.
+//! - `Reference/search/Principal_Variation_Search.md` — `alpha_beta` and
+//!   `search_root_pass` both use the fail-soft PVS pseudocode: first move
+//!   full window, later moves null-window with a conditional full
+//!   re-search.
+//! - `Reference/search/Late_Move_Reductions.md` — late, quiet, non-TT
+//!   moves in `alpha_beta`'s PVS loop get an extra one-ply reduction on
+//!   their initial null-window search, re-searched at full depth if that
+//!   surprisingly beats alpha. Not applied in `search_root_pass` (the
+//!   root is effectively always a PV node, one of this page's own listed
+//!   "not reduced" cases).
 use crate::eval::{evaluate, PIECE_VALUE};
 use crate::tt::{Bound, TranspositionTable, TtEntry};
 use crate::zobrist;
@@ -97,6 +107,18 @@ const ASPIRATION_MAX_RETRIES: u32 = 5;
 /// from `Reference/search/Null_Move_Pruning.md`.
 const NULL_MOVE_MIN_DEPTH: u32 = 4;
 const NULL_MOVE_REDUCTION: u32 = 3;
+
+/// `Reference/search/Late_Move_Reductions.md`'s common "depth < 3" floor
+/// (`LMR_MIN_DEPTH`) and fixed `R = 1` (Zeus's own choice: the simplest
+/// possible, below even the page's quoted "up to two plies"). Among the
+/// moves searched *after* the always-full-depth first move,
+/// `LMR_LATER_MOVE_THRESHOLD` more are still searched at full depth
+/// before reduction starts (0-indexed into that remainder, so the first 4
+/// moves at a node overall are never reduced) — a "late" cutoff this page
+/// doesn't give a number for, documented there as Zeus's own choice.
+const LMR_MIN_DEPTH: u32 = 3;
+const LMR_LATER_MOVE_THRESHOLD: usize = 3;
+const LMR_REDUCTION: u32 = 1;
 
 /// `victim_value*16 - attacker_value`, per `Reference/search/MVV-LVA.md`
 /// (the `*16` multiplier is Zeus's own choice, documented there). `None`
@@ -310,11 +332,45 @@ fn alpha_beta(
             return store_cutoff_and_return(ctx, tt, mv, best_value);
         }
 
-        for mv in moves {
+        let in_check = *board.checkers() != EMPTY;
+        for (move_index, mv) in moves.enumerate() {
+            // Late Move Reductions (Reference/search/Late_Move_Reductions.md):
+            // a late, quiet, non-TT move at this node gets searched one
+            // ply shallower first - if that still beats alpha (surprising,
+            // since move ordering predicted it was worse), re-search at
+            // full depth before falling through to PVS's own full-window
+            // re-search check, so a reduction never costs more than one
+            // extra search when it turns out to matter.
+            let lmr_eligible = depth_left >= LMR_MIN_DEPTH
+                && move_index >= LMR_LATER_MOVE_THRESHOLD
+                && !in_check
+                && capture_score(board, mv).is_none()
+                && Some(mv) != tt_move;
+            let reduction = if lmr_eligible { LMR_REDUCTION } else { 0 };
+
             let child = board.make_move_new(mv);
-            let mut score = -alpha_beta(&child, -alpha - 1, -alpha, depth_left - 1, ply + 1, ctx, tt, true);
+            let mut score = -alpha_beta(
+                &child,
+                -alpha - 1,
+                -alpha,
+                (depth_left - 1).saturating_sub(reduction),
+                ply + 1,
+                ctx,
+                tt,
+                true,
+            );
             if ctx.stop.load(Ordering::Relaxed) {
                 return best_value;
+            }
+            if score > alpha && reduction > 0 {
+                // The reduced search didn't rule this move out - re-verify
+                // at full depth before trusting the full-window re-search
+                // below (which still expects a full-depth null-window
+                // result, per the standard LMR+PVS composition).
+                score = -alpha_beta(&child, -alpha - 1, -alpha, depth_left - 1, ply + 1, ctx, tt, true);
+                if ctx.stop.load(Ordering::Relaxed) {
+                    return best_value;
+                }
             }
             if score > alpha && score < beta {
                 score = -alpha_beta(&child, -beta, -alpha, depth_left - 1, ply + 1, ctx, tt, true);
