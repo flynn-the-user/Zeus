@@ -782,3 +782,52 @@ Takeaways for the next roadmap stage (`ROADMAP.md`):
   actually stopped (expected) or just degraded to cheap fallback moves
   (the defense-in-depth path firing, implying some other panic trigger
   still exists and is worth finding).
+
+## v1.8 — Late Move Reductions
+
+Commit: `afc600d` ("Add late move reductions"). Engine change from v1.7:
+`alpha_beta`'s PVS loop reduces late, quiet, non-TT moves by a fixed
+1 ply on their initial null-window search
+(`Reference/search/Late_Move_Reductions.md`), re-searched at full depth
+first if that surprisingly beats alpha. Methodology identical to v1.7
+(144 games, 6 pairs, same 2000/2300/2600 roster, no saturation). Full
+game log: `results/zeus_v1.8_lmr_tournament.pgn` + `.moves.log`
+(committed, 144 games).
+
+| Participant | Raw (bayeselo) | Calibrated real Elo | +/- | Games | Score% | Draws% |
+|---|---|---|---|---|---|---|
+| Stockfish-2600 | 196 | **2620** | 70/62 | 72 | 79% | 6% |
+| **Zeus-v1.8-LMR** | 70 | **2437** | 60/58 | 72 | 60% | 7% |
+| Stockfish-2300 | -63 | **2243** | 57/59 | 72 | 40% | 10% |
+| Stockfish-2000 | -204 | **2037** | 63/72 | 72 | 21% | 3% |
+
+`real_elo = 2334.5 + 1.4577*raw_elo`. Anchors properly monotonic
+(2620 > 2243 > 2037).
+
+**Zeus v1.8 ≈ 2437 Elo, up +85 over v1.7's 2352.** Clean, positive, and
+the second-largest gain since the TT/PST era, consistent with LMR being
+one of the more impactful "classic" search techniques once move
+ordering (hash move, MVV-LVA, killers — all in place since v1.2) is
+trustworthy enough to make reducing late moves a good bet most of the
+time.
+
+**Timeout fix confirmed working**: all 144 games this run ended in
+`Checkmate` or `MaxPlies` — **zero `Timeout` results**, for the first
+time since v1.3. This is the direct confirmation promised in v1.7's
+entry: the silently-discarded search-thread panic really was the
+mechanism behind all five prior occurrences, and `2c92550`'s fix (both
+the specific `handle_position` legality check and the general
+`catch_unwind` defense-in-depth) resolved it. Not *proof* no other panic
+trigger could ever exist anywhere in the engine, but strong evidence
+the specific long-game pattern that recurred five times in a row is
+actually gone, not just gone quiet.
+
+Takeaways for the next roadmap stage (`ROADMAP.md`):
+- King Safety / Mobility / Pawn Structure evaluation terms are next —
+  the last planned search-side technique (LMR) is now done, so this is
+  the next evaluation-side opportunity, likely to matter more than
+  further search tweaks now that search-side "basic techniques" are
+  essentially complete per the original roadmap list.
+- Keep watching for Timeout results in future measurements as ongoing
+  confirmation, now that there's a clean zero-occurrence baseline to
+  compare against.

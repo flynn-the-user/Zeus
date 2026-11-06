@@ -139,18 +139,29 @@ logged.
       rate <1% of games) — the next stage's regular measurement will
       show whether Timeouts have actually stopped. Full detail in
       `ELO_LOG.md`.
+- [x] v1.8 **Late Move Reductions**
+      (`Reference/search/Late_Move_Reductions.md`), fixed R=1 on late
+      quiet non-TT moves' initial null-window search in the PVS loop,
+      full-depth re-search if that surprisingly beats alpha. Measured
+      (round-robin, 144 games, same 2000+ roster as v1.7, no
+      saturation): **~2437 Elo, +85** over v1.7's 2352 — clean,
+      positive, second-largest gain since the TT/PST era. **Timeout fix
+      confirmed**: all 144 games ended in Checkmate/MaxPlies, zero
+      Timeout results, for the first time since v1.3 — strong evidence
+      the fix in `2c92550` actually resolved the pattern, not just
+      quieted it. Full detail in `ELO_LOG.md`.
 
 ## Planned, in order
 
-1. **Late Move Reductions**.
-2. **King Safety / Mobility / Pawn Structure** evaluation terms.
-3. (stretch) **NNUE** evaluation — large scope increase (training data,
-   network format); only attempted after 1–2 are measured and logged, and
+1. **King Safety / Mobility / Pawn Structure** evaluation terms — the
+   last planned search-side technique is done, so this is the next
+   evaluation-side opportunity.
+2. (stretch) **NNUE** evaluation — large scope increase (training data,
+   network format); only attempted after 1 is measured and logged, and
    only with its own dedicated Reference fetch + citation set.
 
-Next stage's measurement (LMR) will be a clean delta against this
-entry's **~2352 Elo**, same roster — and the first chance to confirm
-whether the timeout fix actually eliminated the pattern.
+Next stage's measurement (king safety/mobility/pawn structure) will be
+a clean delta against this entry's **~2437 Elo**, same roster.
 
 Each numbered stage gets its own commit(s) and its own `ELO_LOG.md` entry
 showing before/after Elo with confidence interval, per
